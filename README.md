@@ -64,6 +64,6 @@ At present, we are discovering the code and the tools to make it work. The organ
 
 ## Suggestions for future work
 
-- Plug in other uniform PRNGs as the random source.
+- Plug in other uniform PRNGs as the random source (for example, WELL512, WELL1024a and the like?).
 - Include programs that explicitly test quality of randomness (e.g., see [8] for feeding output to standard random test suites) and normal-ness of generated normally distributed random numbers, instead of relying of reported tests by Doornik.
 
