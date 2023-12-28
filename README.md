@@ -37,6 +37,8 @@ Bioinformatics Applications", http://www0.cs.ucl.ac.uk/staff/d.jones/GoodPractic
 
 ## Doornik Ziggurat code
 
+A particularly portable, structured and relatively well-documented C code for the generation of normally distributed random numbers is provided by J. A. Doornik.[9] This code was found to compile and run correctly on both Linux and Windows gcc implementation, and will very likely work with other systems and C compilers. It uses the MWC8222 (also called MWC256) PRNG as the source of a uniform random variable, which is then converted to a random variable with a Gaussian distribution using a ziggurat algorithm. We will use the Doornik ziggurat code as the starting point for our exploration and development.
+
 In the folder `original_ziggurat_code_doornik` the source code of the original [ZIP archive](https://www.doornik.com/research/ziggurat_code.zip) by Doornik is conserved. The compiled executables from the ZIP file have been removed for security reasons, and the "makefile" folders for gcc have been renamed to emphasize the 32-bit *vs* 64-bit nature of the targeted executables. The file contents have been left intact.
 
 The necessary files have been copied from `original_ziggurat_code_doornik` to the root folder. It is the objective to use them 'as received' without modification, although minor changes might be applied if really necessary.
@@ -44,7 +46,7 @@ The necessary files have been copied from `original_ziggurat_code_doornik` to th
 
 ## Development environment and compilation 
 
-At present, `gcc` only, both on Windows via [mingw-w64](https://www.mingw-w64.org/)/[w64devkit](https://github.com/skeeto/w64devkit) and on standard Linux (64 bit).
+At present, the development will use `gcc` exclusively, both on Windows via [mingw-w64](https://www.mingw-w64.org/)/[w64devkit](https://github.com/skeeto/w64devkit) and on standard Linux (64 bit).
 
 
 ## Status 
@@ -55,9 +57,13 @@ At present, we are discovering the code and the tools to make it work. The organ
 ## To do
 
 - Set the random seed explicitly using recommended procedure (see Ref. [1]). Document the functioning of `RanNormalSetSeedZig()` which when provided with the proper set of parameters can re-initialize the PRNG in exactly the same state as previously stored.
-- Add command line options to test programs.
+- Add command line options to the test programs.
 - Make a histogrammer that outputs CSV (or raw binary) for plotting, e.g. with Python/matplotlib.
 - Use in actual Brownian simulation and hook up to DDM Toolkit.
+
+
+## Suggestions for future work
+
 - Plug in other uniform PRNGs as the random source.
 - Include programs that explicitly test quality of randomness (e.g., see [8] for feeding output to standard random test suites) and normal-ness of generated normally distributed random numbers, instead of relying of reported tests by Doornik.
 
