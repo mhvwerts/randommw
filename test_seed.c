@@ -4,7 +4,6 @@
 #include <inttypes.h>
 
 
-#include "zigrandom.h"
 #include "zignor.h"
 
 /* test_seed.c 
