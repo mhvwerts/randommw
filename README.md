@@ -97,8 +97,7 @@ At present, we are working towards basic usage of the PRNG for normally distribu
 
 ## To do
 
-- Add command line options to the test programs.
-- Make a histogrammer that outputs CSV (or raw binary) for plotting, *e.g.* with Python/matplotlib.
+- Finish `test_histogram.c` interfacing with Python/numpy/matplotlib (Python script, tweaking etc.). This may involve some clean up to better specify integer types (`int64_t` instead of `long long int` etc.).
 - Use in actual Brownian simulation and hook up to DDM Toolkit.
 
 
