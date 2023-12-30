@@ -79,6 +79,26 @@ The default MWC2588 PRNG is initialized based on a single 32-bit unsigned intege
 - `cSeed == 1`. Then, `piSeed` should point to a (signed) integer containing the seed value, which can be negative. (Internally, the 32-bit signed integer is used as a 32-bit unsigned integer, but no bit is lost.)
 - `cSeed == 256` (the value of `MWC_R`). *Untested*. `piSeed` is a 256-element integer array that completely defines the state of the random number generator. This may be used to restart the PRNG at a precise point, after a long run.
 
+For randomly seeding the MWC2588 PRNG, we can use the conventional method using the system time (not entirely recommended in a multiprocessing environment, but good enough for now). This may be done as follows.
+
+```c
+#include <time.h>
+#include "zignor.h"
+
+(...)
+
+    int zigseed; // signed seed as required by RanNormalSetSeedZig()
+    unsigned int uzigseed; // store unsigned seed from time()
+    
+	// set seed based on time only (good enough for now)
+	uzigseed = (unsigned int) time(NULL); 
+    // convert unsigned to signed without losing one bit
+    // (isentropic conversion)
+    zigseed = (&uzigseed)[0];
+    RanNormalSetSeedZig(&zigseed, 1);
+
+```
+
 
 ### `double DRanNormalZig(void)`
 
@@ -97,12 +117,13 @@ At present, we are working towards basic usage of the PRNG for normally distribu
 
 ## To do
 
-- Finish `test_histogram.c` interfacing with Python/numpy/matplotlib (Python script, tweaking etc.). This may involve some clean up to better specify integer types (`int64_t` instead of `long long int` etc.).
+- Make a Python script for an 'oscilloscope' test of histograms.
 - Use in actual Brownian simulation and hook up to DDM Toolkit.
 
 
 ## Suggestions for future work
 
+- - Clean up to better specify integer types (`int64_t` instead of `long long int` etc.), if and where necessary.
 - Specify `uint32_t` instead of `unsigned int` in `zigrandom.c/GetInitialSeeds()`, since the arithmetic here relies specifically on the 32-bitness of the variable.
 - Plug in other uniform PRNGs as the random source (for example, WELL512, WELL1024a and the like?).
 - Include programs that explicitly test quality of randomness (e.g., see [8] for feeding output to standard random test suites) and normal-ness of generated normally distributed random numbers, instead of relying of reported tests by Doornik.

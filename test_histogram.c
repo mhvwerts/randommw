@@ -4,13 +4,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <time.h>
 
 #include "zignor.h"
 
 #define PREPRINT 10
 #define NUM_RAW_MOMENTS 8
 
-#define H_NBINS 200
+#define H_NBINS 500
 #define H_XW 5.0d
 #define H_FILE "histogram.bin"
 
@@ -30,6 +31,7 @@ int main(int argc, char *argv[])
 	int j;
 	
 	int zigseed;
+	unsigned int uzigseed;
 	double val;
 	
 	double X[NUM_RAW_MOMENTS], x_j;
@@ -47,8 +49,10 @@ int main(int argc, char *argv[])
 	switch(argc)
 	{
 		case 1:
-			Nsamples = 10000000;
-			zigseed = 0;
+			Nsamples = 1000000;
+			// set seed based on time only (good enough for now)
+			uzigseed = (unsigned int) time(NULL); 
+			zigseed = (&uzigseed)[0]; // convert unsigned to signed without losing one bit
 			break;
 		case 3:
 			Nsamples = atoll(argv[1]);
@@ -116,11 +120,13 @@ int main(int argc, char *argv[])
 	fwrite(H, sizeof(H[0]), H_NBINS, fp);	
 	fclose(fp);
 	
+	/*
 	// quick output histogram
 	for (hi = 0; hi < H_NBINS; hi++)
 	{
 		printf("%10.6f\t%lld\n", HV[hi], H[hi]);
 	}
+	*/
 	
 	return 0;
 }
