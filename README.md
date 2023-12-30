@@ -117,13 +117,12 @@ At present, we are working towards basic usage of the PRNG for normally distribu
 
 ## To do
 
-- Make a Python script for an 'oscilloscope' test of histograms.
-- Use in actual Brownian simulation and hook up to DDM Toolkit.
+- Hook up to DDM Toolkit for use in actual Brownian simulation (e.g. program taking parameters: seed, number of Gaussian PRNs, filename for binary; adapt DDM toolkit to load random numbers from file or even call the program directly then load the file)
 
 
 ## Suggestions for future work
 
-- - Clean up to better specify integer types (`int64_t` instead of `long long int` etc.), if and where necessary.
+- Clean up to better specify integer types (`int64_t` instead of `long long int` etc.), if and where necessary.
 - Specify `uint32_t` instead of `unsigned int` in `zigrandom.c/GetInitialSeeds()`, since the arithmetic here relies specifically on the 32-bitness of the variable.
 - Plug in other uniform PRNGs as the random source (for example, WELL512, WELL1024a and the like?).
 - Include programs that explicitly test quality of randomness (e.g., see [8] for feeding output to standard random test suites) and normal-ness of generated normally distributed random numbers, instead of relying of reported tests by Doornik.
