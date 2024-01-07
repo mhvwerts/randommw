@@ -117,11 +117,12 @@ At present, we are working towards basic usage of the PRNG for normally distribu
 
 ## To do
 
-- Hook up to DDM Toolkit for use in actual Brownian simulation (e.g. program taking parameters: seed, number of Gaussian PRNs, filename for binary; adapt DDM toolkit to load random numbers from file or even call the program directly then load the file)
+- Hook up to DDM Toolkit for use in actual Brownian simulation (e.g. program taking parameters: seed, number of Gaussian PRNs, filename for binary output; adapt DDM toolkit to load random numbers sequence from file or call the program directly then load the file)
 
 
 ## Suggestions for future work
 
+- Focus on the 'pure' ZIGNOR algorithm without the [V][I]ZIGNOR optimizations, which do not seem to bring much acceleration on modern 64-bit systems. The original code could then be stripped down.
 - Clean up to better specify integer types (`int64_t` instead of `long long int` etc.), if and where necessary.
 - Specify `uint32_t` instead of `unsigned int` in `zigrandom.c/GetInitialSeeds()`, since the arithmetic here relies specifically on the 32-bitness of the variable.
 - Plug in other uniform PRNGs as the random source (for example, WELL512, WELL1024a and the like?).
