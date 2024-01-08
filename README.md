@@ -1,4 +1,3 @@
-
 # zignormw: Generator of normally distributed pseudo-random numbers
 
 
@@ -107,25 +106,26 @@ Calculate and return the next random number in the normally distributed sequence
 
 ## Development environment and compilation 
 
-At present, the development will use `gcc` exclusively, both on Windows via [mingw-w64](https://www.mingw-w64.org/)/[w64devkit](https://github.com/skeeto/w64devkit) and on standard Linux (64 bit). The code relies on standard C (let's say C99, for the part that is supported by gcc). A single makefile takes care of everything for now.
+At present, the development will use `gcc` exclusively, both on Windows via [mingw-w64](https://www.mingw-w64.org/)/[w64devkit](https://github.com/skeeto/w64devkit) and on standard Linux (64 bit). The code relies on standard C (let's say C99, for the part that is supported by `gcc`). A single makefile takes care of everything for now.
 
 
 ## Status 
 
-At present, we are working towards basic usage of the PRNG for normally distributed numbers. The organization of the code repository is in a preliminary state. Several essential steps need still to be made. Documentation of the test procedures is for now done inside the code.
+At present, we are working towards basic usage and validation of the PRNG for normally distributed numbers in numerical simulations of colloidal systems. The organization of the code repository is in a preliminary state, documentation is minimal, but the essential parts are functional.
 
 
 ## To do
 
-- Hook up to DDM Toolkit for use in actual Brownian simulation (e.g. program taking parameters: seed, number of Gaussian PRNs, filename for binary output; adapt DDM toolkit to load random numbers sequence from file or call the program directly then load the file)
+- Hook up to [DDM Toolkit](https://github.com/mhvwerts/ddm-toolkit) for use in actual Brownian simulation (e.g. program taking parameters: seed, number of Gaussian PRNs, filename for binary output; adapt DDM toolkit to load random numbers sequence from file or call the program directly then load the file)
 
 
 ## Suggestions for future work
 
+- Additional tests of the quality of the normal distribution. The present raw moments test (`test_moments.c`) by McFarland should already be quite good, but further inspiration for tests may be found [here](https://cran.r-project.org/web/packages/RcppZiggurat/vignettes/RcppZiggurat.pdf) and [here](https://www.seehuhn.de/pages/ziggurat.html).
 - Focus on the 'pure' ZIGNOR algorithm without the [V][I]ZIGNOR optimizations, which do not seem to bring much acceleration on modern 64-bit systems. The original code could then be stripped down.
 - Clean up to better specify integer types (`int64_t` instead of `long long int` etc.), if and where necessary.
 - Specify `uint32_t` instead of `unsigned int` in `zigrandom.c/GetInitialSeeds()`, since the arithmetic here relies specifically on the 32-bitness of the variable.
 - Plug in other uniform PRNGs as the random source (for example, WELL512, WELL1024a and the like?).
 - Include programs that explicitly test quality of randomness (e.g., see [8] for feeding output to standard random test suites) and normal-ness of generated normally distributed random numbers, instead of relying of reported tests by Doornik.
-
+- [Voss](https://www.seehuhn.de/pages/ziggurat.html) provides a concise and well-structure ziggurat code that may be compiled and compared. It is likely part of the GNU Scientific Library now.
 
