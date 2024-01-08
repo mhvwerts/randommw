@@ -89,13 +89,15 @@ For randomly seeding the MWC2588 PRNG, we can use the conventional method using 
     int zigseed; // signed seed as required by RanNormalSetSeedZig()
     unsigned int uzigseed; // store unsigned seed from time()
     
-	// set seed based on time only (good enough for now)
-	uzigseed = (unsigned int) time(NULL); 
+    // set seed based on time only (good enough for now)
+    uzigseed = (unsigned int) time(NULL);
+
     // convert unsigned to signed without losing one bit
     // (isentropic conversion)
     zigseed = (&uzigseed)[0];
     RanNormalSetSeedZig(&zigseed, 1);
 
+(...)
 ```
 
 
