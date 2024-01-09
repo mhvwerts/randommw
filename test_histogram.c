@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
 			break;
 		default:
 			printf("ERROR. Unexpected number of arguments.\n");
-			printf("> test_histogram.exe <Nsamples> <seed>\n");
+			printf("usage: %s [<Nsamples> <seed>]\n", argv[0]);
 			return(1);
 	}
 	
