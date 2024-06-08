@@ -12,7 +12,7 @@
 #define NUM_RAW_MOMENTS 8
 
 #define H_NBINS 500
-#define H_XW 10.0d
+#define H_XW 8.0d
 #define H_FILE "histogram.bin"
 
 
