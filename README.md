@@ -1,4 +1,3 @@
-
 # zignormw: Generator of normally distributed pseudo-random numbers
 
 
@@ -12,7 +11,14 @@ The diversity of PRNGs in modern scientific computing is a strength, especially 
 
 Standard PRNGs generally generate uniformly distributed random numbers. Since we need a normal distribution for Brownian simulation, the initial uniform should be converted into a random with a Gaussian distribution. There are several ways to do this,[8] with the [Box-Muller transform](https://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform) and the [ziggurat algorithm](https://en.wikipedia.org/wiki/Ziggurat_algorithm) being amongst the most well-known methods. Several modifications of the ziggurat algorithm now exist, improving statistical properties and/or numerical performance.[9][10] 
 
-In conclusion, I discovered computer generation of random numbers to be a fascinating subject, and an important part of the history and future of scientific computing, with Monte Carlo methods coming to mind as an example. To gain a clearer view of present-day PRNGs, I decided to find structured and documented source code of PRNGs for normally distributed variables, compile them and use them for Brownian simulations, in parallel to our continued use of the routines provided by Python/numpy (`random.Generator.normal` and the MT19937 and PCG64 random number generators). The vehicle chosen for this touristic holiday excursion is the C programming language.
+
+## Doornik's ziggurat code
+
+A particularly portable, structured and relatively well-documented C code for the generation of normally distributed random numbers is provided by J. A. Doornik.[9] This code was found to compile and run correctly on both Linux and Windows gcc implementation, and will very likely work with other systems and C compilers. By default, it uses the MWC8222 (more often called MWC256) PRNG as the source of a uniform random variable, which is then converted to a random variable with a Gaussian distribution using a ziggurat algorithm. We will use the Doornik ziggurat code as the starting point for our edevelopment.
+
+In the folder `original_ziggurat_code_doornik` the source code of the original [ZIP archive](https://www.doornik.com/research/ziggurat_code.zip) by Doornik is conserved. The compiled executables from the ZIP file have been removed for security reasons, and the "makefile" folders for gcc have been renamed to emphasize the 32-bit *vs* 64-bit nature of the targeted executables. The file contents have been left intact.
+
+The necessary files have been copied from `original_ziggurat_code_doornik` to the root folder. It is the objective to use them 'as received' without modification, although minor changes have been applied. In particular, a function `DRan_MWC_52()` was added tot `zigrandom.c` which generates random doubles with full 52-bit mantissa resolution (instead of 32-bit) via two iterations of the MWC8222 generator (see [11]). The resulting 'MWC_52' generator is now used by default.
 
 
 [1] D. Jones, "Good Practice in (Pseudo) Random Number Generation for
@@ -36,14 +42,7 @@ Bioinformatics Applications", http://www0.cs.ucl.ac.uk/staff/d.jones/GoodPractic
 
 [10] C. D. McFarland, "A modified ziggurat algorithm for generating exponentially and normally distributed pseudorandom numbers", Journal of Statistical Computation and Simulation 2016, 7, 1281. https://dx.doi.org/10.1080/00949655.2015.1060234
 
-
-## Doornik's ziggurat code
-
-A particularly portable, structured and relatively well-documented C code for the generation of normally distributed random numbers is provided by J. A. Doornik.[9] This code was found to compile and run correctly on both Linux and Windows gcc implementation, and will very likely work with other systems and C compilers. By default, it uses the MWC8222 (also called MWC256) PRNG as the source of a uniform random variable, which is then converted to a random variable with a Gaussian distribution using a ziggurat algorithm. We will use the Doornik ziggurat code as the starting point for our exploration and development.
-
-In the folder `original_ziggurat_code_doornik` the source code of the original [ZIP archive](https://www.doornik.com/research/ziggurat_code.zip) by Doornik is conserved. The compiled executables from the ZIP file have been removed for security reasons, and the "makefile" folders for gcc have been renamed to emphasize the 32-bit *vs* 64-bit nature of the targeted executables. The file contents have been left intact.
-
-The necessary files have been copied from `original_ziggurat_code_doornik` to the root folder. It is the objective to use them 'as received' without modification, although minor changes might be applied if really necessary.
+[11] J.A. Doornik, "Conversion of High-Period Random Numbers to Floating Point", ACM Trans. Model. Comput. Simul. 2007, 17, 3. https://dx.doi.org/10.1145/1189756.1189759
 
 
 ## Usage
@@ -123,20 +122,19 @@ The generated normally distributed pseudo-random numbers can be written to a bin
 
 - Clean up test programs.
 - Add some PNG figures of the plots generated by the Python scripts to illustrate this document.
-- Add 'warm up'? (millions?)
 - Additional tests of the quality of the generated normal distribution. The present raw moments test (`test_moments.c`) by McFarland should already be quite good, but further inspiration for tests may be found [here](https://cran.r-project.org/web/packages/RcppZiggurat/vignettes/RcppZiggurat.pdf) and [here](https://www.seehuhn.de/pages/ziggurat.html).
-- Include programs that explicitly test quality of randomness (e.g., see [8] for feeding output to standard random test suites) and normal-ness of generated normally distributed random numbers, instead of relying of reported tests by Doornik.
+- Include programs that explicitly test quality of randomness (e.g., see [8] for feeding output to standard random test suites) and normal-ness of generated normally distributed random numbers.
 - [Voss](https://www.seehuhn.de/pages/ziggurat.html) provides a concise and well-structured ziggurat code that may be compiled and compared. The code is actually part of the GNU Scientific Library ([function `gsl_ran_gaussian_ziggurat()`](https://www.gnu.org/software/gsl/doc/html/randist.html#c.gsl_ran_gaussian_ziggurat).
 - Plug in other uniform PRNGs as the random source
-	- see https://doi.org/10.1145/1189756.1189759 for conversion of random integers to useful floating point
+	- see [11] for conversion of random integers to useful floating point
 	- https://groups.google.com/g/comp.lang.c/c/qZFQgKRCQGg/m/rmPkaRHqxOMJ
-	- MT19937, PCG64
-	- https://en.wikipedia.org/wiki/Well_equidistributed_long-period_linear
-	- https://prng.di.unimi.it/
-- Focus on the 'pure' ZIGNOR algorithm without the [V][I]ZIGNOR optimizations, which do not seem to bring much acceleration on modern 64-bit systems.
+	- PCG-64 DXSM from numpy
+	- Any of the fast and well-performing generators tested in https://prng.di.unimi.it/
+	- In particular, generators that can perform jumps to allow for parallel streams
+- Focus on the 'pure' ZIGNOR algorithm without the [V][I]ZIGNOR optimizations, which do not seem to bring much acceleration on modern 64-bit systems. These may be removed from the working code.
 - Clean up to better specify integer types (`int64_t` instead of `long long int` etc.), if and where necessary.
 - Specify `uint32_t` instead of `unsigned int` in `zigrandom.c/GetInitialSeeds()`, since the arithmetic here relies specifically on the 32-bitness of the variable.
-- A simpler function for seeding the built-in MWC2588 generator from a 64-bit integer.
+- A simpler function for seeding the built-in MWC8222 generator from a 64-bit integer.
 
 
 
