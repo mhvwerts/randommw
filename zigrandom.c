@@ -9,6 +9,8 @@
  *	This reference is still required when using modified versions of the code.
  *  This notice should be maintained in modified versions of the code.
  *	No warranty is given regarding the correctness of this code.
+ *--------------------------------------------------------------------------
+ *  Modified version by M. H. V. Werts (2024)
  *==========================================================================*/
 
 #include <limits.h>
