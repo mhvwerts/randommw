@@ -23,6 +23,6 @@ with open(fp, "rb") as f:
 
 plt.figure(1)
 plt.clf()
-plt.plot(HV, H, '.')
+plt.semilogy(HV, H, '.')
 plt.savefig(fo, dpi = 300)
 

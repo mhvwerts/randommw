@@ -12,7 +12,7 @@
 #define NUM_RAW_MOMENTS 8
 
 #define H_NBINS 500
-#define H_XW 5.0d
+#define H_XW 10.0d
 #define H_FILE "histogram.bin"
 
 
@@ -42,6 +42,9 @@ int main(int argc, char *argv[])
 	int hi; // not unsigned!
 	double hdx;
 	double voff;
+	
+	double vmin;
+	double vmax;
 	
 	FILE *fp;
 	unsigned int Nbins;
@@ -86,9 +89,20 @@ int main(int argc, char *argv[])
 		HV[hi] = (hi * hdx) - H_XW;
 	}
 
-
+    vmin = 0.0;
+    vmax = 0.0;
 	for (i = 0; i < Nsamples; i++) {
 		val = DRanNormalZig();
+		
+		// detect extreme values
+		if (val < vmin)
+		{
+        	vmin = val;	
+    	}
+    	if (val > vmax)
+    	{
+        	vmax = val;
+    	}
 		
 		// fill histogram
 		voff = val + H_XW;
@@ -106,7 +120,8 @@ int main(int argc, char *argv[])
 	}
 
 	printf("Created %lld normally distributed pseudo-random numbers...\n", Nsamples);
-	
+	printf("min: %f\n", vmin);
+	printf("max: %f\n", vmax);
 	//Output moments
 	for (j=0; j < NUM_RAW_MOMENTS; j++) {
 		expected = ( (j+1)%2 == 0 ? double_factorial(j) : 0 );
