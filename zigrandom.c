@@ -85,8 +85,7 @@ double DRan_MWC8222(void)
 	return RANDBL_32new(t);
 }
 double DRan_MWC_52(void)
-/* Generate random doubles with full-precision 52-bit mantissa using MWC8222
-*/
+/* Generate random doubles with full-precision 52-bit mantissa using MWC8222 */
 {
 	UINT64 t1, t2;
 
