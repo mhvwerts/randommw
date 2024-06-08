@@ -24,7 +24,8 @@ with open(fp, "rb") as f:
 plt.figure(1)
 plt.clf()
 plt.semilogy(HV, H, '.')
-plt.savefig(fo, dpi = 300)
+plt.semilogy(HV, H.max() * np.exp(-0.5*HV**2), 'r-')
+# plt.savefig(fo, dpi = 300)
 
 
 
