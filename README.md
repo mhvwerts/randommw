@@ -71,14 +71,14 @@ int main(void) {
 
 ### `void RanNormalSetSeedZig(int *piSeed, int cSeed)`
 
-Initialize the ziggurat algorithm and set the random seed for the underlying random number generator. At present, only the default MWC2588 PRNG is supported. The random seed is set via `piSeed` and `cSeed`, where `piSeed` points to an array of integers whose length is given by `cSeed`.
+Initialize the ziggurat algorithm and set the random seed for the underlying random number generator. At present, only the default MWC8222 PRNG is supported. The random seed is set via `piSeed` and `cSeed`, where `piSeed` points to an array of integers whose length is given by `cSeed`.
 
-The default MWC2588 PRNG is initialized based on a single 32-bit unsigned integer seed. There are three cases:
+The default MWC8222 PRNG is initialized based on a single 32-bit unsigned integer seed. There are three cases:
 - `cSeed == 0` and/or `piSeed == NULL` (pointer undefined). The value of the random seed is set to `0`.
 - `cSeed == 1`. Then, `piSeed` should point to a (signed) integer containing the seed value, which can be negative. (Internally, the 32-bit signed integer is used as a 32-bit unsigned integer, but no bit is lost.)
 - `cSeed == 256` (the value of `MWC_R`). *Untested*. `piSeed` is a 256-element integer array that completely defines the state of the random number generator. This may be used to restart the PRNG at a precise point, after a long run.
 
-For randomly seeding the MWC2588 PRNG, we can use the conventional method using the system time (not entirely recommended in a multiprocessing environment, but good enough for now). This may be done as follows.
+For randomly seeding the MWC8222 PRNG, we can use the conventional method using the system time (not entirely recommended in a multiprocessing environment, but good enough for now). This may be done as follows.
 
 ```c
 #include <time.h>
