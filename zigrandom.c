@@ -84,6 +84,24 @@ double DRan_MWC8222(void)
 	s_auiStateMWC[s_uiStateMWC] = (unsigned int)t;
 	return RANDBL_32new(t);
 }
+double DRan_MWC_52(void)
+/* Generate random doubles with full-precision 52-bit mantissa using MWC8222
+*/
+{
+	UINT64 t1, t2;
+
+	s_uiStateMWC = (s_uiStateMWC + 1) & (MWC_R - 1);
+	t1 = MWC_A * s_auiStateMWC[s_uiStateMWC] + s_uiCarryMWC;
+	s_uiCarryMWC = (unsigned int)(t1 >> 32);
+	s_auiStateMWC[s_uiStateMWC] = (unsigned int)t1;
+	
+	s_uiStateMWC = (s_uiStateMWC + 1) & (MWC_R - 1);
+	t2 = MWC_A * s_auiStateMWC[s_uiStateMWC] + s_uiCarryMWC;
+	s_uiCarryMWC = (unsigned int)(t2 >> 32);
+	s_auiStateMWC[s_uiStateMWC] = (unsigned int)t2;
+	
+	return RANDBL_52new(t1, t2);
+}
 void VecIRan_MWC8222(unsigned int *auiRan, int cRan)
 {
 	UINT64 t;
@@ -121,7 +139,8 @@ void VecDRan_MWC8222(double *adRan, int cRan)
 /*------------------- normal random number generators ----------------------*/
 static int s_cNormalInStore = 0;		     /* > 0 if a normal is in store */
 
-static DRANFUN s_fnDRanu = DRan_MWC8222;
+/* Default MWC_52 uniform generator (MWC8222 with 52 bits mantissa) */
+static DRANFUN s_fnDRanu = DRan_MWC_52;
 static IRANFUN s_fnIRanu = IRan_MWC8222;
 static IVECRANFUN s_fnVecIRanu = VecIRan_MWC8222;
 static DVECRANFUN s_fnVecDRanu = VecDRan_MWC8222;
@@ -168,15 +187,25 @@ void    RanSetRan(const char *sRan)
 		s_fnDRanu = DRan_MWC8222;
 		s_fnIRanu = IRan_MWC8222;
 		s_fnVecIRanu = VecIRan_MWC8222;
+		// missing s_fnVecDRanu ?
 		s_fnRanSetSeed = RanSetSeed_MWC8222;
 	}
-	else
-	{
-		s_fnDRanu = NULL;
-		s_fnIRanu = NULL;
-		s_fnVecIRanu = NULL;
-		s_fnRanSetSeed = NULL;
-	}
+	else 
+		if (strcmp(sRan, "MWC_52") == 0)
+		{
+			s_fnDRanu = DRan_MWC_52;
+			s_fnIRanu = IRan_MWC8222;
+			s_fnVecIRanu = VecIRan_MWC8222;
+			// missing s_fnVecDRanu ?
+			s_fnRanSetSeed = RanSetSeed_MWC8222;
+		}
+		else
+		{
+			s_fnDRanu = NULL;
+			s_fnIRanu = NULL;
+			s_fnVecIRanu = NULL;
+			s_fnRanSetSeed = NULL;
+		}
 }
 static unsigned int IRanUfromDRanU(void)
 {

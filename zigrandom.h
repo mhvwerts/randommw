@@ -49,6 +49,7 @@ void 	GetInitialSeeds(unsigned int auiSeed[], int cSeed,
 void RanSetSeed_MWC8222(int *piSeed, int cSeed);
 unsigned int IRan_MWC8222(void);
 double DRan_MWC8222(void);
+double DRan_MWC_52(void);
 void VecIRan_MWC8222(unsigned int *auiRan, int cRan);
 void VecDRan_MWC8222(double *adRan, int cRan);
 
