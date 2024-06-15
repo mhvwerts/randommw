@@ -127,14 +127,7 @@ The generated normally distributed pseudo-random numbers can be written to a bin
 - [Voss](https://www.seehuhn.de/pages/ziggurat.html) provides a concise and well-structured ziggurat code that may be compiled and compared. The code is actually part of the GNU Scientific Library ([function `gsl_ran_gaussian_ziggurat()`](https://www.gnu.org/software/gsl/doc/html/randist.html#c.gsl_ran_gaussian_ziggurat).
 - Plug in other uniform PRNGs as the random source
 	- see [11] for conversion of random integers to useful floating point
-	- https://groups.google.com/g/comp.lang.c/c/qZFQgKRCQGg/m/rmPkaRHqxOMJ
-	- PCG-64 DXSM from numpy
 	- Any of the fast and well-performing generators tested in https://prng.di.unimi.it/
 	- In particular, generators that can perform jumps to allow for parallel streams
-- Focus on the 'pure' ZIGNOR algorithm without the [V][I]ZIGNOR optimizations, which do not seem to bring much acceleration on modern 64-bit systems. These may be removed from the working code.
-- Clean up to better specify integer types (`int64_t` instead of `long long int` etc.), if and where necessary.
-- Specify `uint32_t` instead of `unsigned int` in `zigrandom.c/GetInitialSeeds()`, since the arithmetic here relies specifically on the 32-bitness of the variable.
-- A simpler function for seeding the built-in MWC8222 generator from a 64-bit integer.
-
-
+- A simpler function for seeding the built-in MWC8222 generator from a 64-bit unsigned integer and a more general implementation of RanSetSeed, for better use with other PRNGs. We may discard the option of fully specifiying the state of the PRNG, as this is only needed in very exceptional cases.
 

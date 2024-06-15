@@ -6,6 +6,7 @@
  *  - Added MWC_52 random number generator, which is a full-precision
  *    generator of random doubles in (0, 1) from pairs of 64-bit unsigned
  *    integers coming from MWC_8222 (= MWC_256)
+ *  - Use stdint.h for exact integer widths
  *==========================================================================*/
 
 /*==========================================================================
