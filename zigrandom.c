@@ -1,4 +1,14 @@
 /*==========================================================================
+ *  Modified version of zigrandom.c
+ *  Martinus H. V. Werts, 2024
+ *
+ *  - Fixed a gcc warning
+ *  - Added MWC_52 random number generator, which is a full-precision
+ *    generator of random doubles in (0, 1) from pairs of 64-bit unsigned
+ *    integers coming from MWC_8222 (= MWC_256)
+ *==========================================================================*/
+
+/*==========================================================================
  *  This code is Copyright (C) 2005, Jurgen A. Doornik.
  *  Permission to use this code for non-commercial purposes
  *  is hereby given, provided proper reference is made to:
@@ -9,8 +19,6 @@
  *	This reference is still required when using modified versions of the code.
  *  This notice should be maintained in modified versions of the code.
  *	No warranty is given regarding the correctness of this code.
- *--------------------------------------------------------------------------
- *  Modified version by M. H. V. Werts (2024)
  *==========================================================================*/
 
 #include <limits.h>
@@ -103,37 +111,6 @@ double DRan_MWC_52(void)
 	
 	return RANDBL_52new(t1, t2);
 }
-void VecIRan_MWC8222(unsigned int *auiRan, int cRan)
-{
-	UINT64 t;
-	unsigned int carry = s_uiCarryMWC, state = s_uiStateMWC;
-	
-	for (; cRan > 0; --cRan, ++auiRan)
-	{
-		state = (state + 1) & (MWC_R - 1);
-		t = MWC_A * s_auiStateMWC[state] + carry;
-		*auiRan = s_auiStateMWC[state] = (unsigned int)t;
-		carry = (unsigned int)(t >> 32);
-	}
-	s_uiCarryMWC = carry;
-	s_uiStateMWC = state;
-}
-void VecDRan_MWC8222(double *adRan, int cRan)
-{
-	UINT64 t;
-	unsigned int carry = s_uiCarryMWC, state = s_uiStateMWC;
-	
-	for (; cRan > 0; --cRan, ++adRan)
-	{
-		state = (state + 1) & (MWC_R - 1);
-		t = MWC_A * s_auiStateMWC[state] + carry;
-		s_auiStateMWC[state] = (unsigned int)t;
-		*adRan = RANDBL_32new(t);
-		carry = (unsigned int)(t >> 32);
-	}
-	s_uiCarryMWC = carry;
-	s_uiStateMWC = state;
-}
 /*----------------------- END George Marsaglia MWC -------------------------*/
 
 
@@ -143,8 +120,6 @@ static int s_cNormalInStore = 0;		     /* > 0 if a normal is in store */
 /* Default MWC_52 uniform generator (MWC8222 with 52 bits mantissa) */
 static DRANFUN s_fnDRanu = DRan_MWC_52;
 static IRANFUN s_fnIRanu = IRan_MWC8222;
-static IVECRANFUN s_fnVecIRanu = VecIRan_MWC8222;
-static DVECRANFUN s_fnVecDRanu = VecDRan_MWC8222;
 static RANSETSEEDFUN s_fnRanSetSeed = RanSetSeed_MWC8222;
 
 double  DRanU(void)
@@ -155,26 +130,6 @@ unsigned int IRanU(void)
 {
     return (*s_fnIRanu)();
 }
-void RanVecIntU(unsigned int *auiRan, int cRan)
-{
-    (*s_fnVecIRanu)(auiRan, cRan);
-}
-void RanVecU(double *adRan, int cRan)
-{
-    (*s_fnVecDRanu)(adRan, cRan);
-}
-//void RanVecU(double *adRan, int cRan)
-//{
-//	int i, j, c, airan[256];
-//
-//	for (; cRan > 0; cRan -= 256)
-//	{
-//		c = min(cRan, 256);
-//		(*s_fnVecIRanu)(airan, c);
-//		for (j = 0; j < c; ++j)
-//			*adRan = RANDBL_32new(airan[j]);
-//	}
-//}
 void    RanSetSeed(int *piSeed, int cSeed)
 {
    	s_cNormalInStore = 0;
@@ -187,8 +142,6 @@ void    RanSetRan(const char *sRan)
 	{
 		s_fnDRanu = DRan_MWC8222;
 		s_fnIRanu = IRan_MWC8222;
-		s_fnVecIRanu = VecIRan_MWC8222;
-		// missing s_fnVecDRanu ?
 		s_fnRanSetSeed = RanSetSeed_MWC8222;
 	}
 	else 
@@ -196,15 +149,12 @@ void    RanSetRan(const char *sRan)
 		{
 			s_fnDRanu = DRan_MWC_52;
 			s_fnIRanu = IRan_MWC8222;
-			s_fnVecIRanu = VecIRan_MWC8222;
-			// missing s_fnVecDRanu ?
 			s_fnRanSetSeed = RanSetSeed_MWC8222;
 		}
 		else
 		{
 			s_fnDRanu = NULL;
 			s_fnIRanu = NULL;
-			s_fnVecIRanu = NULL;
 			s_fnRanSetSeed = NULL;
 		}
 }
@@ -216,13 +166,10 @@ static double DRanUfromIRanU(void)
 {
     return RANDBL_32new( (*s_fnIRanu)() );
 }
-void    RanSetRanExt(DRANFUN DRanFun, IRANFUN IRanFun, IVECRANFUN IVecRanFun,
-	DVECRANFUN DVecRanFun, RANSETSEEDFUN RanSetSeedFun)
+void    RanSetRanExt(DRANFUN DRanFun, IRANFUN IRanFun, RANSETSEEDFUN RanSetSeedFun)
 {
 	s_fnDRanu = DRanFun ? DRanFun : DRanUfromIRanU;
 	s_fnIRanu = IRanFun ? IRanFun : IRanUfromDRanU;
-	s_fnVecIRanu = IVecRanFun;
-	s_fnVecDRanu = DVecRanFun;
 	s_fnRanSetSeed = RanSetSeedFun;
 }
 /*---------------- END uniform random number generators --------------------*/
@@ -265,6 +212,7 @@ return u1;
 	u1 *= d;  u2 *= d
 
 static float s_fNormalInStore;
+
 double  FRanNormalPolar(void)                         /* Polar Marsaglia */
 {
     float d, u1;
@@ -328,4 +276,3 @@ double  FRanQuanNormal(void)
 	return DProbNormal(FRanNormalPolar());
 }
 /*----------------------------- END DRanQuanNormal -------------------------*/
-

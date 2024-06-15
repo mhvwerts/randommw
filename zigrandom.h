@@ -50,23 +50,16 @@ void RanSetSeed_MWC8222(int *piSeed, int cSeed);
 unsigned int IRan_MWC8222(void);
 double DRan_MWC8222(void);
 double DRan_MWC_52(void);
-void VecIRan_MWC8222(unsigned int *auiRan, int cRan);
-void VecDRan_MWC8222(double *adRan, int cRan);
 
 /* plug-in RNG */
 typedef double 		( * DRANFUN)(void);
 typedef unsigned int( * IRANFUN)(void);
-typedef void   		( * IVECRANFUN)(unsigned int *, int);
-typedef void   		( * DVECRANFUN)(double *, int);
 typedef void   		( * RANSETSEEDFUN)(int *, int);
 
 void    RanSetRan(const char *sRan);
-void    RanSetRanExt(DRANFUN DRanFun, IRANFUN IRanFun, IVECRANFUN IVecRanFun,
-	DVECRANFUN DVecRanFun, RANSETSEEDFUN RanSetSeedFun);
+void    RanSetRanExt(DRANFUN DRanFun, IRANFUN IRanFun, RANSETSEEDFUN RanSetSeedFun);
 double  DRanU(void);
 unsigned int IRanU(void);
-void    RanVecIntU(unsigned int *auiRan, int cRan);
-void    RanVecU(double *adRan, int cRan);
 void    RanSetSeed(int *piSeed, int cSeed);
 
 /* normal probabilities */
