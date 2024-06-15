@@ -18,6 +18,7 @@
  *	No warranty is given regarding the correctness of this code.
  *==========================================================================*/
 #include <limits.h>
+#include <stdint.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -66,7 +67,7 @@ static void zigNorInit(int iC, double dR, double dV)
 }
 double  DRanNormalZig(void)
 {
-	unsigned int i;
+	uint32_t i;
 	double x, u, f0, f1;
 	
 	for (;;)

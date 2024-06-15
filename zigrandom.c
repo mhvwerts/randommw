@@ -22,6 +22,7 @@
  *==========================================================================*/
 
 #include <limits.h>
+#include <stdint.h>
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -29,11 +30,11 @@
 #include "zigrandom.h"
 
 /*---------------------------- GetInitialSeeds -----------------------------*/
-void GetInitialSeeds(unsigned int auiSeed[], int cSeed,
-	unsigned int uiSeed, unsigned int uiMin)
+void GetInitialSeeds(uint32_t auiSeed[], int32_t cSeed,
+	uint32_t uiSeed, uint32_t uiMin)
 {
 	int i;
-	unsigned int s = uiSeed;									/* may be 0 */
+	uint32_t s = uiSeed;									/* may be 0 */
 
 	for (i = 0; i < cSeed; )
 	{	/* see Knuth p.106, Table 1(16) and Numerical Recipes p.284 (ranqd1)*/
@@ -49,12 +50,12 @@ void GetInitialSeeds(unsigned int auiSeed[], int cSeed,
 
 /*------------------------ George Marsaglia MWC ----------------------------*/
 #define MWC_R  256
-#define MWC_A  LIT_UINT64(809430660)
+#define MWC_A  809430660ull // unsigned long long is 64 bits
 #define MWC_AI 809430660
 #define MWC_C  362436
-static unsigned int s_uiStateMWC = MWC_R - 1;
-static unsigned int s_uiCarryMWC = MWC_C;
-static unsigned int s_auiStateMWC[MWC_R];
+static uint32_t s_uiStateMWC = MWC_R - 1;
+static uint32_t s_uiCarryMWC = MWC_C;
+static uint32_t s_auiStateMWC[MWC_R];
 
 void RanSetSeed_MWC8222(int *piSeed, int cSeed)
 {
@@ -66,7 +67,7 @@ void RanSetSeed_MWC8222(int *piSeed, int cSeed)
 		int i;
 		for (i = 0; i < MWC_R; ++i)
 		{
-			s_auiStateMWC[i] = (unsigned int)piSeed[i];
+			s_auiStateMWC[i] = (uint32_t)piSeed[i];
 		}
 	}
 	else
@@ -74,40 +75,40 @@ void RanSetSeed_MWC8222(int *piSeed, int cSeed)
 		GetInitialSeeds(s_auiStateMWC, MWC_R, piSeed && cSeed ? piSeed[0] : 0, 0);
 	}
 }
-unsigned int IRan_MWC8222(void)
+uint32_t IRan_MWC8222(void)
 {
-	UINT64 t;
+	uint64_t t;
 
 	s_uiStateMWC = (s_uiStateMWC + 1) & (MWC_R - 1);
 	t = MWC_A * s_auiStateMWC[s_uiStateMWC] + s_uiCarryMWC;
-	s_uiCarryMWC = (unsigned int)(t >> 32);
-	s_auiStateMWC[s_uiStateMWC] = (unsigned int)t;
-    return (unsigned int)t;
+	s_uiCarryMWC = (uint32_t)(t >> 32);
+	s_auiStateMWC[s_uiStateMWC] = (uint32_t)t;
+    return (uint32_t)t;
 }
 double DRan_MWC8222(void)
 {
-	UINT64 t;
+	uint64_t t;
 
 	s_uiStateMWC = (s_uiStateMWC + 1) & (MWC_R - 1);
 	t = MWC_A * s_auiStateMWC[s_uiStateMWC] + s_uiCarryMWC;
-	s_uiCarryMWC = (unsigned int)(t >> 32);
-	s_auiStateMWC[s_uiStateMWC] = (unsigned int)t;
+	s_uiCarryMWC = (uint32_t)(t >> 32);
+	s_auiStateMWC[s_uiStateMWC] = (uint32_t)t;
 	return RANDBL_32new(t);
 }
 double DRan_MWC_52(void)
 /* Generate random doubles with full-precision 52-bit mantissa using MWC8222 */
 {
-	UINT64 t1, t2;
+	uint64_t t1, t2;
 
 	s_uiStateMWC = (s_uiStateMWC + 1) & (MWC_R - 1);
 	t1 = MWC_A * s_auiStateMWC[s_uiStateMWC] + s_uiCarryMWC;
-	s_uiCarryMWC = (unsigned int)(t1 >> 32);
-	s_auiStateMWC[s_uiStateMWC] = (unsigned int)t1;
+	s_uiCarryMWC = (uint32_t)(t1 >> 32);
+	s_auiStateMWC[s_uiStateMWC] = (uint32_t)t1;
 	
 	s_uiStateMWC = (s_uiStateMWC + 1) & (MWC_R - 1);
 	t2 = MWC_A * s_auiStateMWC[s_uiStateMWC] + s_uiCarryMWC;
-	s_uiCarryMWC = (unsigned int)(t2 >> 32);
-	s_auiStateMWC[s_uiStateMWC] = (unsigned int)t2;
+	s_uiCarryMWC = (uint32_t)(t2 >> 32);
+	s_auiStateMWC[s_uiStateMWC] = (uint32_t)t2;
 	
 	return RANDBL_52new(t1, t2);
 }
@@ -126,7 +127,7 @@ double  DRanU(void)
 {
     return (*s_fnDRanu)();
 }
-unsigned int IRanU(void)
+uint32_t IRanU(void)
 {
     return (*s_fnIRanu)();
 }
@@ -138,29 +139,31 @@ void    RanSetSeed(int *piSeed, int cSeed)
 void    RanSetRan(const char *sRan)
 {
    	s_cNormalInStore = 0;
+	
+	/* BEGIN if ... else if ... else block */
 	if (strcmp(sRan, "MWC8222") == 0)
 	{
 		s_fnDRanu = DRan_MWC8222;
 		s_fnIRanu = IRan_MWC8222;
 		s_fnRanSetSeed = RanSetSeed_MWC8222;
 	}
-	else 
-		if (strcmp(sRan, "MWC_52") == 0)
-		{
-			s_fnDRanu = DRan_MWC_52;
-			s_fnIRanu = IRan_MWC8222;
-			s_fnRanSetSeed = RanSetSeed_MWC8222;
-		}
-		else
-		{
-			s_fnDRanu = NULL;
-			s_fnIRanu = NULL;
-			s_fnRanSetSeed = NULL;
-		}
+	else if (strcmp(sRan, "MWC_52") == 0)
+	{
+		s_fnDRanu = DRan_MWC_52;
+		s_fnIRanu = IRan_MWC8222;
+		s_fnRanSetSeed = RanSetSeed_MWC8222;
+	}
+	else // DEFAULT
+	{
+		s_fnDRanu = NULL;
+		s_fnIRanu = NULL;
+		s_fnRanSetSeed = NULL;
+	}
+	/* END if ... else if ... else block */
 }
-static unsigned int IRanUfromDRanU(void)
+static uint32_t IRanUfromDRanU(void)
 {
-    return (unsigned int)(UINT_MAX * (*s_fnDRanu)());
+    return (uint32_t)(UINT_MAX * (*s_fnDRanu)());
 }
 static double DRanUfromIRanU(void)
 {
