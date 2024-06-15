@@ -35,7 +35,7 @@ void Timer(char *sName, double (*DRan)(), void (*DRanSeed)(int *, int), unsigned
 
 int main(void) 
 {
-	int cm = 1000000000;
+	unsigned int cm = 1000000000;
 
 	TimerHeader();
 
@@ -44,9 +44,6 @@ int main(void)
 
 	RanSetRan("MWC8222");
 	Timer("ZIGNOR",			DRanNormalZig, 			RanNormalSetSeedZig, cm);
-	Timer("VZIGNOR",		DRanNormalZigVec, 		RanNormalSetSeedZigVec, cm);
-	Timer("IZIGNOR",		DRanNormalZig32, 		RanNormalSetSeedZig32, cm);
-	Timer("VIZIGNOR",		DRanNormalZig32Vec, 	RanNormalSetSeedZig32Vec, cm);
 
 	return 0;
 }
