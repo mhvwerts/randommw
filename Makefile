@@ -9,7 +9,7 @@ CPATH    = .
 	$(CC) -c $(CFLAGS) $<
 
 
-OBJECTS0 = zigrandom.o zignor.o
+OBJECTS0 = randommw.o
 OBJECTS1 = zigtimer.o
 OBJECTS2 = test_moments.o
 OBJECTS3 = test_seed.o
