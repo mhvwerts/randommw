@@ -46,7 +46,7 @@ Bioinformatics Applications", http://www0.cs.ucl.ac.uk/staff/d.jones/GoodPractic
 
 ## Usage
 
-For simple generation of normally distributed random numbers (double precision), only `randommw.c` and `randommw.h` are needed. This uses the MWC8222 uniform PRNG, which should be suitable for many applications. Only two functions are of relevance in this case: `RanNormalSetSeedZig()` for initialization and `DRanNormalZig()` for normally-distributed random numbers.
+For simple generation of normally distributed random numbers (double precision), only `randommw.c` and `randommw.h` are needed. By default, this uses the MWC_52 uniform PRNG, which should be suitable for many applications. Only two functions are of relevance in this case: `RanNormalSetSeedZig()` for initialization and `DRanNormalZig()` for normally-distributed random numbers.
 
 ```c
 #include <stdio.h>
@@ -70,14 +70,14 @@ int main(void) {
 
 ### `void RanNormalSetSeedZig(int *piSeed, int cSeed)`
 
-Initialize the ziggurat algorithm and set the random seed for the underlying random number generator. At present, only the default MWC8222 PRNG is supported. The random seed is set via `piSeed` and `cSeed`, where `piSeed` points to an array of integers whose length is given by `cSeed`.
+Initialize the ziggurat algorithm and set the random seed for the underlying random number generator. At present, only the MWC_52 and MWC8222 PRNGs are supported. The random seed is set via `piSeed` and `cSeed`, where `piSeed` points to an array of integers whose length is given by `cSeed`.
 
 The default MWC8222 PRNG is initialized based on a single 32-bit unsigned integer seed. There are three cases:
 - `cSeed == 0` and/or `piSeed == NULL` (pointer undefined). The value of the random seed is set to `0`.
 - `cSeed == 1`. Then, `piSeed` should point to a (signed) integer containing the seed value, which can be negative. (Internally, the 32-bit signed integer is used as a 32-bit unsigned integer, but no bit is lost.)
 - `cSeed == 256` (the value of `MWC_R`). *Untested*. `piSeed` is a 256-element integer array that completely defines the state of the random number generator. This may be used to restart the PRNG at a precise point, after a long run.
 
-For randomly seeding the MWC8222 PRNG, we can use the conventional method using the system time (not entirely recommended in a multiprocessing environment, but good enough for now). This may be done as follows.
+For randomly seeding the MWC8222 and derived MWC_52 PRNGs, we can use the conventional method using the system time (not entirely recommended in a multiprocessing environment, but good enough for now). This may be done as follows.
 
 ```c
 #include <time.h>
@@ -119,7 +119,7 @@ Generated normally distributed pseudo-random numbers can be written to a binary 
 
 ## Suggestions for future work
 
-- A simpler function for seeding the built-in MWC8222 generator from a 64-bit unsigned integer and a more general implementation of RanSetSeed, for better use with other PRNGs. We may discard the option of fully specifiying the state of the PRNG, as this is only needed in very exceptional cases.
+- A simpler function for seeding the built-in MWC8222 generator from a 64-bit unsigned integer and a more general implementation of RanSetSeed, for better use with other PRNGs. We may discard the option of fully specifiying the state of the PRNG, as this is only needed in very exceptional cases. Deprecate `RanNormalSetSeedZig()`, and simply initialize the ziggurat separately with `zigNorInit()`. 
 - Plug in other uniform PRNGs as the random source
 	- see [11] for conversion of random integers to useful floating point
 	- Any of the fast and well-performing generators tested in https://prng.di.unimi.it/
