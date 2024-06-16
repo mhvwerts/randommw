@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
 			return(1);
 	}
 	
-	RanNormalSetSeedZig(&zigseed, 1);
+	RanInit((uint64_t) zigseed);
 	
 	// Print the first numbers generated, for visual inspection
 	for (i = 0; i < PREPRINT; i++)

@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-
 #include <inttypes.h>
-
 
 #include "randommw.h"
 
@@ -54,23 +52,6 @@ int double_factorial(int n) {
     return(n);
 }
 
-// Testing evaluation of somewhat cryptic expression in zigrandom.c
-// 
-void eval_RanSetSeed(int *piSeed, int cSeed)
-{
-	printf("evalRanSetSeed result: %d\n", piSeed && cSeed ? piSeed[0] : 0);
-}
-
-
-// zigrandom.c/GetInitialSeed() is called to set MWC initial state (256 uint values) 
-//    This implements the Numerical Recipes 'randq1' 'even quicker & dirtier' PRNG.
-//    It relies on 32 bit unsigned int arithmetic, so let's check that we indeed use
-//    32 bit unsigned int arithmetic
-void eval_sizeof_uint()
-{
-	printf("unsigned int size in bytes: %lld\n", sizeof(unsigned int));
-}
-
 
 
 int main(int argc, char *argv[])
@@ -97,50 +78,8 @@ int main(int argc, char *argv[])
 			return(1);
 	}
 	
-	
-
-	/*
-		HOW TO SEED
-	
-	    The standard Zignor generator is initialized and
-		seeded using 
-		    RanNormalSetSeedZig(int *piSeed, int cSeed) 
-		which calls
-		first: zigNorInit() -> initialization of ziggurat
-		then: RanSetSeed(int *piseed, int cSeed) 
-			-> set seed of chosen random generator
-		which is always MWC8222 for now
-		and is handled by RanSetSeed_MWC8222(int *piSeed, inc cSeed)
-		
-		There, if cSeed == MWC_R (currently set at 256), piSeed
-		is expected to point to a 256 (MWC_R)-element int array that initializes
-		the MWC8222 state.
-		
-		Other values for cSeed will go to GetInitialSeeds
-		with 256 (MWC_R) and piSeed[0] as parameters
-		or just 256 and 0 if piSeed is not intialized or cSeed is 0
-		
-		Hence, there are three cases here:
-		cSeed == MWC_R: initialize MWC8222 from *piSeed
-		cSeed == 0: initialize MWC8222 using 0 as seed
-		cSeed == 1: initialize MWC8222 using piSeed[0] as seed
-	
-		Therefore, if a seed is needed:
-		cSeed == 1 and pass a pointer to the seed value
-		
-		The seed value is an int (32 bits) which is somewhere
-		converted implicitly to an unsigned 32 bit int, through
-		pointer exchange, conserving all bits
-		
-    */ 	
-	
-	// just pass the pointer to the variable containing the seed
-	// and set cSeed to 1
-	eval_RanSetSeed(&SeedZig, 1); // just checking
-	RanNormalSetSeedZig(&SeedZig, 1); 
-
-	// check 32-bitness of uint
-	eval_sizeof_uint();
+	// Initialize randommw PRNG system
+	RanInit(SeedZig);
 
 	// Print the first numbers generated, for visual inspection
 	for (i = 0; i < PREPRINT; i++)

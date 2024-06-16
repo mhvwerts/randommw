@@ -1,0 +1,31 @@
+evalRanSetSeed result: 12345
+unsigned int size in bytes: 4
+  0.501423
+  0.837408
+ -1.408617
+ -1.303886
+ -1.020661
+  0.501541
+  1.558533
+  0.742133
+ -1.545762
+  0.946636
+  0.037936
+  1.534680
+  2.573511
+ -0.463695
+  0.162021
+  0.144862
+ -0.837359
+ -0.312017
+  0.153230
+ -0.169944
+Created 1000000000 normally distributed pseudo-random numbers...
+X1: -0.000036 (Expected 0)
+X2: 0.999996 (Expected 1)
+X3: -0.000185 (Expected 0)
+X4: 3.000137 (Expected 3)
+X5: -0.000812 (Expected 0)
+X6: 15.002143 (Expected 15)
+X7: 0.000829 (Expected 0)
+X8: 105.028157 (Expected 105)

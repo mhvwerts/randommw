@@ -6,10 +6,10 @@
 
 int main(void) {
 	unsigned int i;
-	int zigseed = 10;
+	uint64_t zigseed = 10;
 	double rval;
 		
-	RanNormalSetSeedZig(&zigseed, 1);
+	RanInit(zigseed);
 	
 	for(i = 0; i < 20; i++)	{
 		rval = DRanNormalZig();

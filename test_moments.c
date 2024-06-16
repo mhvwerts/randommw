@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-
 #include <inttypes.h>
-
 
 #include "randommw.h"
 
@@ -48,15 +46,6 @@ int double_factorial(int n) {
     return(n);
 }
 
-// Testing evaluation of somewhat cryptic expression in zigrandom.c
-// 
-void eval_RanSetSeed(int *piSeed, int cSeed)
-{
-	printf("evalRanSetSeed result: %d\n",piSeed && cSeed ? piSeed[0] : 0);
-}
-
-
-
 
 int main(void)
 {
@@ -67,19 +56,8 @@ int main(void)
 
 	int expected;
 
-	// TO DO: how to seed??
-	RanNormalSetSeedZig(NULL, 0);
-	/* code for RanNormalSetSeedZig (recall)
-	   This also initializes the zignor generator, and
-	   subsequently handles calling RanSetSeed
-	
-	void  RanNormalSetSeedZig(int *piSeed, int cSeed)
-	{
-		zigNorInit(ZIGNOR_C, ZIGNOR_R, ZIGNOR_V);
-		RanSetSeed(piSeed, cSeed);
-	}
-	*/
-	eval_RanSetSeed(NULL, 0);
+	// Initialize the PRNG (seed) and Ziggurat algorithm
+	RanInit(0);
 
 	// Print the first numbers generated, for visual inspection
 	for (i = 0; i < PREPRINT; i++)

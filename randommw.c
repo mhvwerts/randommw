@@ -74,7 +74,31 @@ void GetInitialSeeds_MWC8222(uint32_t auiSeed[], int32_t cSeed,
     }
 }
 
-void RanSetSeed_MWC8222(int *piSeed, int cSeed)
+/*
+The MWC8222 generator is initialized and seeded using 
+	RanSetSeed_MWC8222_original(int *piSeed, int cSeed)
+
+If cSeed == MWC_R (currently set at 256), piSeed
+is expected to point to a 256 (MWC_R)-element int array that initializes
+the MWC8222 state.
+
+Other values for cSeed will go to GetInitialSeeds
+with 256 (MWC_R) and piSeed[0] as parameters
+or just 256 and 0 if piSeed is not intialized or cSeed is 0
+
+Hence, there are three cases here:
+- cSeed == MWC_R: initialize MWC8222 from *piSeed
+- cSeed == 0: initialize MWC8222 using 0 as seed
+- cSeed == 1: initialize MWC8222 using piSeed[0] as seed
+
+Therefore, if a single seed value is used:
+cSeed == 1 and pass a pointer to the seed value
+
+The seed value is a signed int (32 bits) which is somewhere
+converted implicitly to an unsigned 32 bit int, through
+pointer exchange, conserving all bits
+*/ 	
+void RanSetSeed_MWC8222_original(int *piSeed, int cSeed)
 {
 	s_uiStateMWC = MWC_R - 1;
 	s_uiCarryMWC = MWC_C;
@@ -91,6 +115,15 @@ void RanSetSeed_MWC8222(int *piSeed, int cSeed)
 	{
 		GetInitialSeeds_MWC8222(s_auiStateMWC, MWC_R, piSeed && cSeed ? piSeed[0] : 0, 0);
 	}
+}
+
+// New-style RanSetSeed interface (single unsigned 64-bit integer seed)
+// interfaced to original RanSetSeed for MWC8222
+void RanSetSeed_MWC8222(uint64_t uSeed)
+{
+	int iSeed;
+	iSeed = (int)uSeed;
+	RanSetSeed_MWC8222_original(&iSeed, 1);
 }
 
 uint32_t IRan_MWC8222(void)
@@ -153,11 +186,18 @@ uint32_t IRanU(void)
     return (*s_fnIRanu)();
 }
 
-void    RanSetSeed(int *piSeed, int cSeed)
+void    RanSetSeed(uint64_t uSeed)
 {
    	s_cNormalInStore = 0;
-	(*s_fnRanSetSeed)(piSeed, cSeed);
+	(*s_fnRanSetSeed)(uSeed);
 }
+
+/* keep PRNG jumps for later
+void    RanJump(uint64_t uJumpsize)
+{
+	(*s_fnRanJump)(uJumpsize);
+}
+*/
 
 void    RanSetRan(const char *sRan)
 {
@@ -391,13 +431,6 @@ double  DRanNormalZig(void)
 			return x;
 	}
 }
-
-void  RanNormalSetSeedZig(int *piSeed, int cSeed)
-{
-	zigNorInit(ZIGNOR_C, ZIGNOR_R, ZIGNOR_V);
-	RanSetSeed(piSeed, cSeed);
-}
-
 /*--------------------------- END General Ziggurat -------------------------*/
 
 /*--------------------------- functions for testing ------------------------*/
@@ -407,3 +440,16 @@ double  DRanQuanNormalZig(void)
 }
 
 /*------------------------- END functions for testing ----------------------*/
+
+
+/*==========================================================================
+ *  General utility functions
+ *  Martinus H. V. Werts, 2024
+ *==========================================================================*/
+ 
+ 
+void  RanInit(uint64_t uSeed)
+{
+	zigNorInit(ZIGNOR_C, ZIGNOR_R, ZIGNOR_V);
+	RanSetSeed(uSeed);
+}

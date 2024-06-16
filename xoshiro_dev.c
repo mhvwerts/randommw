@@ -193,6 +193,17 @@ uint64_t splitmix64_next() {
  * Future interface between xoshiro256+ and zigrandom
  *----------------------------------------------------------------*/
 
+void RanSetSeed_xoshiro256(uint64_t uSeed)
+{
+	splitmix64_x = uSeed; // seed splitmix
+	
+	// use splitmix to fully seed xoshiro256
+	xoshiro256_s[0] = splitmix64_next();
+	xoshiro256_s[1] = splitmix64_next();
+	xoshiro256_s[2] = splitmix64_next();
+	xoshiro256_s[3] = splitmix64_next();
+}
+
 uint32_t IRan_xoshiro256(void)
 {
 	return (uint32_t)(xoshiro256_next() >> 32);
@@ -210,6 +221,7 @@ double DRan_xoshiro256(void)
 }
 
 
+
 /*---------------------------------------------------------------- 
  * test & development code
  ----------------------------------------------------------------*/
@@ -221,12 +233,8 @@ int main(int argc, char **argv)
 	
 	printf("hello, world\n");
 
-	splitmix64_x = 0x974ef530e0479120; // seed splitmix (randomly chosen value)
-	xoshiro256_s[0] = splitmix64_next();
-	xoshiro256_s[1] = splitmix64_next();
-	xoshiro256_s[2] = splitmix64_next();
-	xoshiro256_s[3] = splitmix64_next();
-	
+	RanSetSeed_xoshiro256(0x974ef530e0479120); 
+
 	printf("\n");
 	
 	for (i = 0; i < 20; i++)

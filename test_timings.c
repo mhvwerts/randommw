@@ -7,18 +7,19 @@
 
 void TimerHeader() 
 {
-	printf("------------------------------------------------------------------\n");
+	printf("------------------------------------------------------------------------\n");
 	printf("%-30s%8s %22s %10s\n", "Name", "time", "mean", "reps");
-
+	printf("------------------------------------------------------------------------\n");
 }
-void Timer(char *sName, double (*DRan)(), void (*DRanSeed)(int *, int), unsigned int cM) 
+
+void Timer(char *sName, double (*DRan)(), void (*DRanSeed)(uint64_t), unsigned int cM) 
 {
 	unsigned int i;
 	double ran, mean;
 	
 	printf("%-29s", sName);
 
-	(*DRanSeed)(NULL, 0);
+	(*DRanSeed)(0);
 
 	StartTimer();
 	for (i = 0, mean = 0.0; i < cM; ++i)
@@ -32,6 +33,7 @@ void Timer(char *sName, double (*DRan)(), void (*DRanSeed)(int *, int), unsigned
 	printf(" %8s %#22.15g %10d\n", GetLapsedTime(), mean, cM);
 }
 
+
 int main(void) 
 {
 	unsigned int cm = 1000000000;
@@ -40,9 +42,16 @@ int main(void)
 
 	Timer("Warming up",		DRan_MWC8222, 			RanSetSeed_MWC8222, cm/10); 
 	Timer("MWC8222",		DRan_MWC8222, 			RanSetSeed_MWC8222, cm);
+	Timer("MWC_52",			DRan_MWC_52, 			RanSetSeed_MWC8222, cm);
 
 	RanSetRan("MWC8222");
-	Timer("ZIGNOR",			DRanNormalZig, 			RanNormalSetSeedZig, cm);
+	Timer("ZIGNOR",			DRanNormalZig, 			RanInit, cm);
+	
+	RanSetRan("MWC_52");
+	Timer("ZIGNOR MWC_52",	DRanNormalZig, 			RanInit, cm);
+	
+	RanSetRan("MWC8222");
+	Timer("ZIGNOR (again)",	DRanNormalZig, 			RanInit, cm);
 
 	return 0;
 }

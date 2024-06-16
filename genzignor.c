@@ -44,7 +44,7 @@ int main(int argc, char **argv)
 	printf("output file       : %s\n", fname);
 	printf("-------------------------------------\n");
 	
-	RanNormalSetSeedZig(&zigseed, 1);
+	RanInit((uint64_t)zigseed);
 	
 	dbuf = malloc(sizeof(*dbuf) * Nsamples);
 	

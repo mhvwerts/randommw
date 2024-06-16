@@ -44,6 +44,6 @@ for i in range(20):
     plt.clf()
     plt.plot(HV, H, '.')
     plt.xlim(-5,5)
-    plt.ylim(0,4400)
+    plt.ylim(0,8000)
     plt.savefig(fo.format(i), dpi = 150)
     

@@ -46,7 +46,7 @@ Bioinformatics Applications", http://www0.cs.ucl.ac.uk/staff/d.jones/GoodPractic
 
 ## Usage
 
-For simple generation of normally distributed random numbers (double precision), only `randommw.c` and `randommw.h` are needed. By default, this uses the MWC_52 uniform PRNG, which should be suitable for many applications. Only two functions are of relevance in this case: `RanNormalSetSeedZig()` for initialization and `DRanNormalZig()` for normally-distributed random numbers.
+For simple generation of normally distributed random numbers (double precision), only `randommw.c` and `randommw.h` are needed. By default, this uses the MWC_52 uniform PRNG, which should be suitable for many applications. Only two functions are of relevance in this case: `RanInit()` for initialization and `DRanNormalZig()` for normally-distributed random numbers.
 
 ```c
 #include <stdio.h>
@@ -54,10 +54,10 @@ For simple generation of normally distributed random numbers (double precision),
 
 int main(void) {
 	unsigned int i;
-	int zigseed = 10;
+	uint64_t zigseed = 10;
 	double rval;
 		
-	RanNormalSetSeedZig(&zigseed, 1);
+	RanInit(zigseed);
 	
 	for(i = 0; i < 20; i++)	{
 		rval = DRanNormalZig();
@@ -66,6 +66,7 @@ int main(void) {
 	
 	return 0;
 }
+
 ```
 
 ### `void RanNormalSetSeedZig(int *piSeed, int cSeed)`

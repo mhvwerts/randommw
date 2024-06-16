@@ -31,7 +31,7 @@ void 	GetInitialSeeds(uint32_t auiSeed[], int32_t cSeed,
 	                    uint32_t uiSeed, uint32_t uiMin);
 
 /* MWC8222 George Marsaglia */
-void RanSetSeed_MWC8222(int *piSeed, int cSeed);
+void RanSetSeed_MWC8222(uint64_t uSeed);
 uint32_t IRan_MWC8222(void);
 double DRan_MWC8222(void);
 double DRan_MWC_52(void);
@@ -39,13 +39,13 @@ double DRan_MWC_52(void);
 /* plug-in RNG */
 typedef double 		( * DRANFUN)(void);
 typedef uint32_t 	( * IRANFUN)(void);
-typedef void   		( * RANSETSEEDFUN)(int *, int);
+typedef void   		( * RANSETSEEDFUN)(uint64_t);
 
 void    RanSetRan(const char *sRan);
 void    RanSetRanExt(DRANFUN DRanFun, IRANFUN IRanFun, RANSETSEEDFUN RanSetSeedFun);
 double  DRanU(void);
 uint32_t  IRanU(void);
-void    RanSetSeed(int *piSeed, int cSeed);
+void    RanSetSeed(uint64_t uSeed);
 
 /* normal probabilities */
 double  DProbNormal(double x);
@@ -59,8 +59,8 @@ double  DRanQuanNormal(void);
 
 
 /* from zignor.h */
-void    RanNormalSetSeedZig(int *piSeed, int cSeed);
 double  DRanNormalZig(void);
-
 double  DRanQuanNormalZig(void);
 
+/* further extensions */
+void  RanInit(uint64_t uSeed);
