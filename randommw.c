@@ -47,8 +47,18 @@
  *	No warranty is given regarding the correctness of this code.
  *==========================================================================*/
 
-/*---------------------------- GetInitialSeeds -----------------------------*/
-void GetInitialSeeds(uint32_t auiSeed[], int32_t cSeed,
+
+/*------------------------ George Marsaglia MWC ----------------------------*/
+#define MWC_R  256
+#define MWC_A  809430660ull // unsigned long long is 64 bits
+#define MWC_AI 809430660
+#define MWC_C  362436
+static uint32_t s_uiStateMWC = MWC_R - 1;
+static uint32_t s_uiCarryMWC = MWC_C;
+static uint32_t s_auiStateMWC[MWC_R];
+
+
+void GetInitialSeeds_MWC8222(uint32_t auiSeed[], int32_t cSeed,
 	uint32_t uiSeed, uint32_t uiMin)
 {
 	int i;
@@ -63,17 +73,6 @@ void GetInitialSeeds(uint32_t auiSeed[], int32_t cSeed,
 		++i;
     }
 }
-/*-------------------------- END GetInitialSeeds ---------------------------*/
-
-
-/*------------------------ George Marsaglia MWC ----------------------------*/
-#define MWC_R  256
-#define MWC_A  809430660ull // unsigned long long is 64 bits
-#define MWC_AI 809430660
-#define MWC_C  362436
-static uint32_t s_uiStateMWC = MWC_R - 1;
-static uint32_t s_uiCarryMWC = MWC_C;
-static uint32_t s_auiStateMWC[MWC_R];
 
 void RanSetSeed_MWC8222(int *piSeed, int cSeed)
 {
@@ -90,7 +89,7 @@ void RanSetSeed_MWC8222(int *piSeed, int cSeed)
 	}
 	else
 	{
-		GetInitialSeeds(s_auiStateMWC, MWC_R, piSeed && cSeed ? piSeed[0] : 0, 0);
+		GetInitialSeeds_MWC8222(s_auiStateMWC, MWC_R, piSeed && cSeed ? piSeed[0] : 0, 0);
 	}
 }
 
@@ -136,7 +135,7 @@ double DRan_MWC_52(void)
 /*----------------------- END George Marsaglia MWC -------------------------*/
 
 
-/*------------------- normal random number generators ----------------------*/
+/*------------------- uniform random number generators ----------------------*/
 static int s_cNormalInStore = 0;		     /* > 0 if a normal is in store */
 
 /* Default MWC_52 uniform generator (MWC8222 with 52 bits mantissa) */
@@ -148,15 +147,18 @@ double  DRanU(void)
 {
     return (*s_fnDRanu)();
 }
+
 uint32_t IRanU(void)
 {
     return (*s_fnIRanu)();
 }
+
 void    RanSetSeed(int *piSeed, int cSeed)
 {
    	s_cNormalInStore = 0;
 	(*s_fnRanSetSeed)(piSeed, cSeed);
 }
+
 void    RanSetRan(const char *sRan)
 {
    	s_cNormalInStore = 0;
