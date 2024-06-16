@@ -1,4 +1,4 @@
-# zignormw: Generation of pseudo-random numbers with uniform and Gaussian distributions
+# randommw: Generation of pseudo-random numbers with uniform and Gaussian distributions
 
 
 ## Introduction
