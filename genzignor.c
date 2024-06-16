@@ -11,8 +11,8 @@ Generate a binary file containing normally N(0,1) distributed random numbers
 #include <stdio.h>
 #include <string.h>
 
+#include "randommw.h"
 #include "zigtimer.h"
-#include "zignor.h"
 
 #define FNAMEMAX 63
 

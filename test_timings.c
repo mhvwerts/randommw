@@ -1,9 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "zigrandom.h"
+#include "randommw.h"
 #include "zigtimer.h"
-#include "zignor.h"
 
 
 void TimerHeader() 

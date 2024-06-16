@@ -2,7 +2,7 @@
 
 */
 #include <stdio.h>
-#include "zignor.h"
+#include "randommw.h"
 
 int main(void) {
 	unsigned int i;

@@ -4,7 +4,7 @@
 #include <inttypes.h>
 
 
-#include "zignor.h"
+#include "randommw.h"
 
 /* test_seed.c 
  *

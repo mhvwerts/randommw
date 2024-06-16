@@ -6,7 +6,7 @@
 #include <math.h>
 #include <time.h>
 
-#include "zignor.h"
+#include "randommw.h"
 
 #define PREPRINT 10
 #define NUM_RAW_MOMENTS 8

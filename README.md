@@ -1,4 +1,4 @@
-# zignormw: Generator of normally distributed pseudo-random numbers
+# zignormw: Generation of pseudo-random numbers with uniform and Gaussian distributions
 
 
 ## Introduction
@@ -14,12 +14,11 @@ Standard PRNGs generally generate uniformly distributed random numbers. Since we
 
 ## Doornik's ziggurat code
 
-A particularly portable, structured and relatively well-documented C code for the generation of normally distributed random numbers is provided by J. A. Doornik.[9] This code was found to compile and run correctly on both Linux and Windows gcc implementation, and will very likely work with other systems and C compilers. By default, it uses the MWC8222 (more often called MWC256) PRNG as the source of a uniform random variable, which is then converted to a random variable with a Gaussian distribution using a ziggurat algorithm. We will use the Doornik ziggurat code as the starting point for our development.
+A particularly portable, structured and relatively well-documented C code for the generation of normally distributed random numbers is provided by J. A. Doornik.[9] This code was found to compile and run correctly on both Linux and Windows gcc implementation, and will very likely work with other systems and C compilers. By default, it uses the MWC8222 (more often called MWC256) PRNG as the source of a uniform random variable, which is then converted to a random variable with a Gaussian distribution using a ziggurat algorithm. We used the Doornik ziggurat code as the starting point for our development.
 
 In the folder `original_ziggurat_code_doornik` the source code of the original [ZIP archive](https://www.doornik.com/research/ziggurat_code.zip) by Doornik is conserved. The compiled executables from the ZIP file have been removed for security reasons, and the "makefile" folders for gcc have been renamed to emphasize the 32-bit *vs* 64-bit nature of the targeted executables. The file contents have been left intact.
 
-The necessary files have been copied from `original_ziggurat_code_doornik` to the root folder. It is the objective to use them 'as received' without modification, although minor changes have been applied. In particular, a function `DRan_MWC_52()` was added tot `zigrandom.c` which generates random doubles with full 52-bit mantissa resolution (instead of 32-bit) via two iterations of the MWC8222 generator (see [11]). The resulting 'MWC_52' generator is now used by default.
-
+The files necessary for development (`zignor.c`, `zignor.h`, `zigrandom.c` and `zigrandom.h`) have been copied from `original_ziggurat_code_doornik` to the root folder. `zignor` and `zigrandom` have undergone minor  modifications, and were then merged into `randommw`. The modifications only concern the structure of the code, not the fundamental algorithms. A function `DRan_MWC_52()` was added which generates random doubles with full 52-bit mantissa resolution (instead of 32-bit) via two iterations of the MWC8222 generator (see [11]). The resulting 'MWC_52' generator is now used by default.
 
 [1] D. Jones, "Good Practice in (Pseudo) Random Number Generation for
 Bioinformatics Applications", http://www0.cs.ucl.ac.uk/staff/d.jones/GoodPracticeRNG.pdf
@@ -47,11 +46,11 @@ Bioinformatics Applications", http://www0.cs.ucl.ac.uk/staff/d.jones/GoodPractic
 
 ## Usage
 
-For simple generation of normally distributed random numbers (double precision), only `zignor.c`, `zignor.h`, `zigrandom.c` and `zigrandom.h` are needed. This includes an underlying MWC8222 uniform PRNG, which should be suitable for many applications. Only two functions are of relevance in this case: `RanNormalSetSeedZig()` for initialization and `DRanNormalZig()` for random numbers.
+For simple generation of normally distributed random numbers (double precision), only `randommw.c` and `randommw.h` are needed. This uses the MWC8222 uniform PRNG, which should be suitable for many applications. Only two functions are of relevance in this case: `RanNormalSetSeedZig()` for initialization and `DRanNormalZig()` for normally-distributed random numbers.
 
 ```c
 #include <stdio.h>
-#include "zignor.h"
+#include "randommw.h"
 
 int main(void) {
 	unsigned int i;
@@ -113,21 +112,22 @@ At present, the development will use `gcc` exclusively, both on Windows via [min
 
 ## Status 
 
-At present, we are working towards basic usage and validation of the PRNG for normally distributed numbers in numerical simulations of colloidal systems. The essential parts are functional, even though the organization of the code repository is in a preliminary state and documentation is minimal.
+At present, we are working towards basic usage and validation of the PRNG for normally distributed numbers in numerical simulations of colloidal systems. The code is now contained in a monolithic module that can be easily included in a scientific computing project in C.  
 
-The generated normally distributed pseudo-random numbers can be written to a binary file using `genzignor.c`. They have been used successfully for Brownian simulations in [DDM Toolkit](https://github.com/mhvwerts/ddm-toolkit), giving consistent results between the simulation and subsequent DDM analysis of the simulated image stack.
+Generated normally distributed pseudo-random numbers can be written to a binary file using `genzignor.c`. These numbers have been used successfully for Brownian simulations in [DDM Toolkit](https://github.com/mhvwerts/ddm-toolkit), giving consistent results between the simulation and subsequent DDM analysis of the simulated image stack.
 
 
 ## Suggestions for future work
 
+- A simpler function for seeding the built-in MWC8222 generator from a 64-bit unsigned integer and a more general implementation of RanSetSeed, for better use with other PRNGs. We may discard the option of fully specifiying the state of the PRNG, as this is only needed in very exceptional cases.
+- Plug in other uniform PRNGs as the random source
+	- see [11] for conversion of random integers to useful floating point
+	- Any of the fast and well-performing generators tested in https://prng.di.unimi.it/
+	- In particular, generators that can perform jumps to allow for parallel streams
 - Clean up test programs.
 - Add some PNG figures of the plots generated by the Python scripts to illustrate this document.
 - Additional tests of the quality of the generated normal distribution. The present raw moments test (`test_moments.c`) by McFarland should already be quite good, but further inspiration for tests may be found [here](https://cran.r-project.org/web/packages/RcppZiggurat/vignettes/RcppZiggurat.pdf) and [here](https://www.seehuhn.de/pages/ziggurat.html).
 - Include programs that explicitly test quality of randomness (e.g., see [8] for feeding output to standard random test suites) and normal-ness of generated normally distributed random numbers.
 - [Voss](https://www.seehuhn.de/pages/ziggurat.html) provides a concise and well-structured ziggurat code that may be compiled and compared. The code is actually part of the GNU Scientific Library ([function `gsl_ran_gaussian_ziggurat()`](https://www.gnu.org/software/gsl/doc/html/randist.html#c.gsl_ran_gaussian_ziggurat).
-- Plug in other uniform PRNGs as the random source
-	- see [11] for conversion of random integers to useful floating point
-	- Any of the fast and well-performing generators tested in https://prng.di.unimi.it/
-	- In particular, generators that can perform jumps to allow for parallel streams
-- A simpler function for seeding the built-in MWC8222 generator from a 64-bit unsigned integer and a more general implementation of RanSetSeed, for better use with other PRNGs. We may discard the option of fully specifiying the state of the PRNG, as this is only needed in very exceptional cases.
+
 

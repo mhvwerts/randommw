@@ -4,8 +4,7 @@
 #include <inttypes.h>
 
 
-#include "zigrandom.h"
-#include "zignor.h"
+#include "randommw.h"
 
 /* test_moments.c 
  *
