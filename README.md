@@ -69,34 +69,22 @@ int main(void) {
 
 ```
 
-### `void RanNormalSetSeedZig(int *piSeed, int cSeed)`
+### `void RanInit(uint64_t uSeed)`
 
-Initialize the ziggurat algorithm and set the random seed for the underlying random number generator. At present, only the MWC_52 and MWC8222 PRNGs are supported. The random seed is set via `piSeed` and `cSeed`, where `piSeed` points to an array of integers whose length is given by `cSeed`.
+Initialize the ziggurat algorithm and set the random seed for the underlying random number generator. The default generator is MWC_52 (which is MWC8222 with 52-bit random mantissa for floating point doubles). The random seed `uSeed` is always an unsigned 64-bit integer, independently of the specific random number generator. A PRNG-specific routine uses this seed to fully initialize the PRNG.
 
-The default MWC8222 PRNG is initialized based on a single 32-bit unsigned integer seed. There are three cases:
-- `cSeed == 0` and/or `piSeed == NULL` (pointer undefined). The value of the random seed is set to `0`.
-- `cSeed == 1`. Then, `piSeed` should point to a (signed) integer containing the seed value, which can be negative. (Internally, the 32-bit signed integer is used as a 32-bit unsigned integer, but no bit is lost.)
-- `cSeed == 256` (the value of `MWC_R`). *Untested*. `piSeed` is a 256-element integer array that completely defines the state of the random number generator. This may be used to restart the PRNG at a precise point, after a long run.
-
-For randomly seeding the MWC8222 and derived MWC_52 PRNGs, we can use the conventional method using the system time (not entirely recommended in a multiprocessing environment, but good enough for now). This may be done as follows.
+For seeding the PRNGs randomly, we can use the conventional method using the system time (not entirely recommended in a multiprocessing environment, but good enough for now). This may be done in the following somewhat clunky way.
 
 ```c
 #include <time.h>
 #include "zignor.h"
 
 (...)
-
-    int zigseed; // signed seed as required by RanNormalSetSeedZig()
-    unsigned int uzigseed; // store unsigned seed from time()
+    unsigned int zigseed;
     
     // set seed based on time only (good enough for now)
-    uzigseed = (unsigned int) time(NULL);
-
-    // convert unsigned to signed without losing one bit
-    // (isentropic conversion)
-    zigseed = (&uzigseed)[0];
-    RanNormalSetSeedZig(&zigseed, 1);
-
+    zigseed = (unsigned int) time(NULL);
+    RanInit((uint64_t)zigseed);
 (...)
 ```
 
@@ -120,7 +108,6 @@ Generated normally distributed pseudo-random numbers can be written to a binary 
 
 ## Suggestions for future work
 
-- A simpler function for seeding the built-in MWC8222 generator from a 64-bit unsigned integer and a more general implementation of RanSetSeed, for better use with other PRNGs. We may discard the option of fully specifiying the state of the PRNG, as this is only needed in very exceptional cases. Deprecate `RanNormalSetSeedZig()`, and simply initialize the ziggurat separately with `zigNorInit()`. 
 - Plug in other uniform PRNGs as the random source
 	- see [11] for conversion of random integers to useful floating point
 	- Any of the fast and well-performing generators tested in https://prng.di.unimi.it/
