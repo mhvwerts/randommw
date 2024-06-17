@@ -1,4 +1,4 @@
-# randommw: Generation of pseudo-random numbers with uniform and Gaussian distributions
+# randommw: Monolithic generator of pseudo-random numbers with uniform and Gaussian distributions (in C)
 
 
 ## Introduction
@@ -73,18 +73,15 @@ int main(void) {
 
 Initialize the ziggurat algorithm and set the random seed for the underlying random number generator. The default generator is MWC_52 (which is MWC8222 with 52-bit random mantissa for floating point doubles). The random seed `uSeed` is always an unsigned 64-bit integer, independently of the specific random number generator. A PRNG-specific routine uses this seed to fully initialize the PRNG.
 
-For seeding the PRNGs randomly, we can use the conventional method using the system time (not entirely recommended in a multiprocessing environment, but good enough for now). This may be done in the following somewhat clunky way.
+For seeding the PRNGs randomly, we can use the conventional method using the system time (not entirely recommended in a multiprocessing environment, but good enough for now). This may be done in the following way.
 
 ```c
 #include <time.h>
-#include "zignor.h"
+#include "randommw.h"
 
 (...)
-    unsigned int zigseed;
-    
     // set seed based on time only (good enough for now)
-    zigseed = (unsigned int) time(NULL);
-    RanInit((uint64_t)zigseed);
+    RanInit((uint64_t)time(NULL));
 (...)
 ```
 
