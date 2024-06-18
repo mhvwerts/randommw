@@ -1,0 +1,204 @@
+#!/usr/bin/wolframscript
+(* Ziggurat Method Generator of Zero-Mean Gaussians
+ *
+ * Copyright 2019 Frank R. Kschischang <frank@ece.utoronto.ca>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * For additional information about ZMG, visit
+ *
+ *     http://www.comm.utoronto.ca/frank/ZMG
+ *)
+(*
+ Usage: commandname m
+   where 2^m is the maximum number of rectangles for an integer m
+*)
+If [Length[$ScriptCommandLine] != 2, Exit[], Null ];
+m = ToExpression[$ScriptCommandLine[[2]]];
+If [Head[m] != Integer, Exit[], Null];
+If [m < 3 || m > 16, Exit[], Null];
+
+L = 2^m;
+f[x_] := Exp[-x*x/2];
+A = Integrate[f[x], {x, 0, Infinity}];
+convextrapparam[x0_,x1_,y_] := Module[ {slope,f0,f1,t,ft},
+      f0 = f[x0]; f1 = f[x1]; slope = (f1-f0)/(x1-x0);
+      t = Max[ x/. NSolve[(-x)*f[x] == slope,x,Reals,WorkingPrecision->70]];
+      ft = f[t];
+      (* return a list *)
+      {
+         NIntegrate[f[x]-y,{x,x0,x1},WorkingPrecision->60]/A, (* p *)
+         x1-x0,    (* width *)
+         f0+f1-2*y,(* left height + right height *)
+         slope,    (* slope *)
+         (x0 + x1)/2, (* xshift *)
+         (f0 + f1)/2, (* yshift *)
+         f0 + slope*(t-x0) - ft (* epsilon *)
+      }
+];
+concavetrapparam[x0_,x1_,y_] := Module[ {slope,f0,f1,t,ft},
+      f0 = f[x0]; f1 = f[x1]; t = (x0 + x1)/2; ft = f[t]; slope = -t * ft;
+      {
+         NIntegrate[f[x]-y,{x,x0,x1},WorkingPrecision->60]/A, (* p *)
+         x1-x0,     (* dx *)
+         2*(ft-y),  (* dy *)
+         slope,
+         t,         (* xshift *)
+         ft,        (* yshift *)
+         Max[ft - slope*(x1-x0)/2 - f0, ft + slope*(x1-x0)/2 - f1]
+      }
+];
+minindex[list_] := First[First[Position[list,Min[list ]]]];
+maxindex[list_] := First[First[Position[list,Max[list ]]]];
+
+(* compute the list of rectangle boundaries, stored in z *)
+
+z = {Max[ x /. NSolve[ x*f[x] == A/L,x,Reals,WorkingPrecision->70]]};
+tail = NIntegrate[f[x],{x,z[[1]],Infinity},WorkingPrecision->60]/A;
+lambda = (z[[1]] + Sqrt[ z[[1]]*z[[1]] + 4])/2;
+While[ z[[1]] > 0, z=Prepend[z,Max[0,x/.NSolve[x*(f[x]-f[z[[1]]])==A/L,x,
+       Reals,WorkingPrecision->70]]]];
+
+(* compute the list of trapezoid parameters *)
+(* each entry is { p, dx, dy, m, xshift, yshift, epsilon } *)
+
+zz = z;
+topcount = 10;topwidth = zz[[2]];(* split top overhang into topcount pieces *)
+For [j=1, j < topcount, j++, zz=Prepend[zz,j*topwidth/topcount]];
+zz=Prepend[zz,1]; zz=Sort[zz];
+trapezoid={};
+For [i=1, i<Length[zz], i++,
+   y = f[Min[ Select[z,#>=zz[[i+1]]&]]];
+   If[ zz[[i+1]] <= 1,
+   trapezoid = Prepend[trapezoid,concavetrapparam[ zz[[i]],zz[[i+1]],y ]],
+   trapezoid = Prepend[trapezoid,convextrapparam[  zz[[i]],zz[[i+1]],y ]]]];
+
+(* compute the probability jump tables *)
+
+zz = tail + Total[trapezoid[[All,1]]];
+p = Append[trapezoid[[All,1]],tail]/zz;
+(* assumption: the probabilities are given in a list named p *)
+If [ Total[p] != 1,
+      Abort[],
+      pp = Round[2^32*p];
+   ];
+While [ Total[pp] != 2^32,
+   If [ Total[pp] > 2^32,
+      i = maxindex[ pp ]; pp[[i]] = pp[[i]] - 1,
+      i = minindex[ pp ]; pp[[i]] = pp[[i]] + 1]];
+If [Min[pp] == 0,
+     Abort[],
+     pp = PadRight[pp,2^Ceiling[Log[2,Length[pp]]+1]]];
+u = Length[pp];  target = 2^32/u;
+q = {};
+For [i=1, i<=u, i++,
+   q = Append[q,{pp[[i]],i,i}]];
+(* { stay_mass, label, alias } *)
+toobig    = Select[ q, (First[#] > target)& ];
+toosmall  = Select[ q, (First[#] < target) &];
+justright = Select[ q, (First[#] == target) &];
+While[ Length[toobig] > 0,
+   donorpos =  maxindex[ toobig[[All,1]] ];
+   donortriple = toobig[[ donorpos ]];
+   receptorpos = minindex [ toosmall[[All,1]] ];
+   receptortriple = toosmall[[ receptorpos ]];
+   toobig = Delete[ toobig, donorpos ];
+   toosmall = Delete[ toosmall, receptorpos ];
+   justright = Append[ justright,
+               {receptortriple[[1]],receptortriple[[2]],donortriple[[2]]}];
+   donortriple[[1]] = donortriple[[1]] - (target - receptortriple[[1]]);
+   If [donortriple[[1]] > target, toobig = Append[toobig, donortriple],
+       If [donortriple[[1]] < target, toosmall = Append[toosmall,donortriple],
+                             justright = Append[justright,donortriple]]]
+];
+r = Sort[ justright, #1[[2]] < #2[[2]]&]; (* sort by label *)
+
+s = OpenWrite["table"<>IntegerString[m,10,2]<>"f.h",PageWidth->Infinity,FormatType->OutputForm];
+Write[s,"/* These data were auto-generated on ",DateString[]]
+Write[s," ZMG_R      = number of rectangles"]
+Write[s," ZMG_MR     = number of bits to mask for rectangle selection"]
+Write[s," ZMG_RMASK  = rectangle selection mask"]
+Write[s," ZMG_T      = number of trapezoids + 1 for tail"]
+Write[s," ZMG_MT     = number of bits to mask for trapezoid selection"]
+Write[s," ZMG_TMASK  = trapezoid+tail selection mask"]
+Write[s," ZMG_A      = start of tail"]
+Write[s," ZMG_LAMBDA = parameter of exp dist for tail sampling"]
+Write[s," ZMG_K      = -1/LAMBDA"]
+Write[s,"********************************************************************/"]
+Write[s,"#define ZMG_R ",Length[z]-1]
+Write[s,"#define ZMG_MR ",m]
+Write[s,"#define ZMG_RMASK ",2^m-1]
+Write[s,"#define ZMG_T ",Length[trapezoid]+1]
+Write[s,"#define ZMG_MT ",Ceiling[Log[2,Length[r]]]]
+Write[s,"#define ZMG_TMASK ",2^Ceiling[Log[2,Length[r]]]-1]
+Write[s,"#define ZMG_A ",N[Last[z],40]];
+Write[s,"#define ZMG_LAMBDA ",N[lambda,40]];
+Write[s,"#define ZMG_K (",N[-1/lambda,40],")"];
+If[ m <= 8,
+   Write[s,"/* Rectangle width scaled by 2^",m-31," */"];
+   Write[s,"static float ZMG_Rect[",Length[z]-1,"]="];
+   zstring = StringReplace[ExportString[N[2^(m-31)*Rest[z],15],"PythonExpression"],{"["->"{","]"->"};"}];
+   Write[s,zstring],
+   Write[s,"/* Rectangle width scaled by 2^-32 */"];
+   Write[s,"static float ZMG_Rect[",Length[z]-1,"]="];
+   zstring = StringReplace[ExportString[N[2^(-32)*Rest[z],15],"PythonExpression"],{"["->"{","]"->"};"}];
+   Write[s,zstring]];
+Write[s,"static float ZMG_Trap[",6*Length[trapezoid],"]="]
+trap = Flatten[ trapezoid[[All,{2,3,4,5,6,7}]]];
+zstring = StringReplace[ExportString[N[trap,15],"PythonExpression"],{"["->"{","]"->"};"}];
+Write[s,zstring];
+Write[s,"static uint32_t ZMG_restprob[",Length[trapezoid]+1,"]="];
+zstring = StringReplace[ExportString[u*r[[Range[Length[trapezoid]+1],1]]-1,"PythonExpression"],{"["->"{","]"->"};"}];
+Write[s,zstring];
+Write[s,"static int ZMG_jump[",u,"]="];
+zstring = StringReplace[ExportString[r[[All,3]]-1,"PythonExpression"],{"["->"{","]"->"};"}];
+Write[s,zstring];
+Close[s];
+
+s = OpenWrite["table"<>IntegerString[m,10,2]<>"d.h",PageWidth->Infinity,FormatType->OutputForm];
+Write[s,"/********************************************************************"]
+Write[s,"These data were auto-generated on ",DateString[]]
+Write[s," ZMG_R      = number of rectangles"]
+Write[s," ZMG_MR     = number of bits to mask for rectangle selection"]
+Write[s," ZMG_RMASK  = rectangle selection mask"]
+Write[s," ZMG_T      = number of trapezoids + 1 for tail"]
+Write[s," ZMG_MT     = number of bits to mask for trapezoid selection"]
+Write[s," ZMG_TMASK  = trapezoid+tail selection mask"]
+Write[s," ZMG_A      = start of tail"]
+Write[s," ZMG_LAMBDA = parameter of exp dist for tail sampling"]
+Write[s," ZMG_K      = -1/LAMBDA"]
+Write[s,"********************************************************************/"]
+Write[s,"#define ZMG_R ",Length[z]-1]
+Write[s,"#define ZMG_MR ",m]
+Write[s,"#define ZMG_RMASK ",2^m-1]
+Write[s,"#define ZMG_T ",Length[trapezoid]+1]
+Write[s,"#define ZMG_MT ",Ceiling[Log[2,Length[r]]]]
+Write[s,"#define ZMG_TMASK ",2^Ceiling[Log[2,Length[r]]]-1]
+Write[s,"#define ZMG_A ",N[Last[z],40]];
+Write[s,"#define ZMG_LAMBDA ",N[lambda,40]];
+Write[s,"#define ZMG_K (",N[-1/lambda,40],")"];
+Write[s,"/* Rectangle width scaled by 2^",m-63," */"];
+Write[s,"static double ZMG_Rect[",Length[z]-1,"]="];
+zstring = StringReplace[ExportString[N[2^(m-63)*Rest[z],15],"PythonExpression"],{"["->"{","]"->"};"}];
+Write[s,zstring];
+Write[s,"static double ZMG_Trap[",6*Length[trapezoid],"]="]
+trap = Flatten[ trapezoid[[All,{2,3,4,5,6,7}]]];
+zstring = StringReplace[ExportString[N[trap,15],"PythonExpression"],{"["->"{","]"->"};"}];
+Write[s,zstring];
+Write[s,"static uint32_t ZMG_restprob[",Length[trapezoid]+1,"]="];
+zstring = StringReplace[ExportString[u*r[[Range[Length[trapezoid]+1],1]]-1,"PythonExpression"],{"["->"{","]"->"};"}];
+Write[s,zstring];
+Write[s,"static int ZMG_jump[",u,"]="];
+zstring = StringReplace[ExportString[r[[All,3]]-1,"PythonExpression"],{"["->"{","]"->"};"}];
+Write[s,zstring];
+Close[s];
