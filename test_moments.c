@@ -57,6 +57,7 @@ int main(void)
 	int expected;
 
 	// Initialize the PRNG (seed) and Ziggurat algorithm
+	RanSetRan("Xoshiro256+"); printf("Xoshiro256+ activated.\n");
 	RanInit(0);
 
 	// Print the first numbers generated, for visual inspection

@@ -6,6 +6,9 @@
  * Werts, 2024
  *==========================================================================*/
 
+
+
+
 /* from zigrandom.h */
 #ifndef ZIGRANDOM_H
 #define ZIGRANDOM_H
@@ -27,10 +30,18 @@
     ((int)(iRan1) * M_RAN_INVM32 + (0.5 + M_RAN_INVM52 / 2) + \
         (int)((iRan2) & 0x000FFFFF) * M_RAN_INVM52)
 
-void 	GetInitialSeeds(uint32_t auiSeed[], int32_t cSeed,
-	                    uint32_t uiSeed, uint32_t uiMin);
+/* xoshiro256+ */
+void RanSetSeed_xoshiro256p(uint64_t uSeed);
+uint32_t IRan_xoshiro256p(void);
+double DRan_xoshiro256p(void);
+
 
 /* MWC8222 George Marsaglia */
+
+/* void 	GetInitialSeeds(uint32_t auiSeed[], int32_t cSeed,
+	                    uint32_t uiSeed, uint32_t uiMin);
+*/
+
 void RanSetSeed_MWC8222(uint64_t uSeed);
 uint32_t IRan_MWC8222(void);
 double DRan_MWC8222(void);
@@ -61,6 +72,8 @@ double  DRanQuanNormal(void);
 /* from zignor.h */
 double  DRanNormalZig(void);
 double  DRanQuanNormalZig(void);
+
+/* xoshiro256 */
 
 /* further extensions */
 void  RanInit(uint64_t uSeed);

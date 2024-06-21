@@ -67,6 +67,7 @@ int main(int argc, char *argv[])
 			return(1);
 	}
 	
+	RanSetRan("Xoshiro256+"); printf("Xoshiro256+ activated.\n");
 	RanInit((uint64_t) zigseed);
 	
 	// Print the first numbers generated, for visual inspection

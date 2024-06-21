@@ -46,7 +46,9 @@ Bioinformatics Applications", http://www0.cs.ucl.ac.uk/staff/d.jones/GoodPractic
 
 ## Usage
 
-For simple generation of normally distributed random numbers (double precision), only `randommw.c` and `randommw.h` are needed. By default, this uses the MWC_52 uniform PRNG, which should be suitable for many applications. Only two functions are of relevance in this case: `RanInit()` for initialization and `DRanNormalZig()` for normally-distributed random numbers.
+For simple generation of normally distributed random numbers (double precision), only `randommw.c` and `randommw.h` are needed. By default, this uses the MWC_52 uniform PRNG, which should be suitable for many applications. 
+
+Here is a minimal example, which only uses two fucntions: `RanInit()` for initialization and `DRanNormalZig()` for normally-distributed random numbers.
 
 ```c
 #include <stdio.h>
@@ -71,7 +73,9 @@ int main(void) {
 
 ### `void RanInit(uint64_t uSeed)`
 
-Initialize the ziggurat algorithm and set the random seed for the underlying random number generator. The default generator is MWC_52 (which is MWC8222 with 52-bit random mantissa for floating point doubles). The random seed `uSeed` is always an unsigned 64-bit integer, independently of the specific random number generator. A PRNG-specific routine uses this seed to fully initialize the PRNG.
+Initialize the ziggurat algorithm and set the random seed for the underlying random number generator. The default generator is MWC_52 (which is MWC8222 with 52-bit random mantissa for floating point doubles). If a different generator is desired, call `RanSetRan()` before `RanInit()`.
+
+The random seed `uSeed` is always an unsigned 64-bit integer, independently of the specific random number generator. A PRNG-specific routine uses this seed to fully initialize the PRNG.
 
 For seeding the PRNGs randomly, we can use the conventional method using the system time (not entirely recommended in a multiprocessing environment, but good enough for now). This may be done in the following way.
 
@@ -88,30 +92,46 @@ For seeding the PRNGs randomly, we can use the conventional method using the sys
 
 ### `double DRanNormalZig(void)`
 
-Calculate and return the next random number in the normally distributed sequence.
+Calculate and return the next random number in the normally distributed sequence using the ziggurat algorithm.
+
+
+### `double DRanU(void)`
+
+Obtain a double-precision floating point random number from a uniform distribution (0, 1) using the active PRNG. Full 52-bit mantissa randomness (except if you are using the legacy MWC8222 generator).
+
+
+### `uint32_t IranU(void)`
+
+Obtain an unsigned 32-bit integer random number from the active PRNG.
+
+
+### `void RanSetRan(const char *sRan)`
+
+Choose the uniform pseudo-random number generator that feeds the ziggurat algorithm. At present, the choices are `"MWC8222"`, `"MWC_52"` and `"Xoshiro256+"`. The string is case-sensitive, and should correspond exactly to one of these three; else, your program will crash. 
+
+After calling `RanSetRan()`, you should call `RanInit()` (again). Or, put differently, `RanSetRan()` should be called before `RanInit()`.
 
 
 ## Development environment and compilation 
 
-At present, the development will use `gcc` exclusively, both on Windows via [mingw-w64](https://www.mingw-w64.org/)/[w64devkit](https://github.com/skeeto/w64devkit) and on standard Linux (64 bit). The code relies on standard C (let's say C99, for the part that is supported by `gcc`). A single makefile takes care of everything for now.
+At present, the development uses `gcc` exclusively, both on Windows via [mingw-w64](https://www.mingw-w64.org/)/[w64devkit](https://github.com/skeeto/w64devkit) and on standard Linux (64 bit). The code relies on standard C (C99, for the part that is supported by `gcc`). A single makefile takes care of everything.
 
 
 ## Status 
 
-At present, we are working towards basic usage and validation of the PRNG for normally distributed numbers in numerical simulations of colloidal systems. The code is now contained in a monolithic module that can be easily included in a scientific computing project in C.  
+At present, we are working towards basic usage and validation of the PRNG for normally distributed numbers in numerical simulations of colloidal systems. The code is now contained in a monolithic module (`randommw.c`) that can be easily included in a scientific computing project in C. Random numbers having a good Gaussian distribution (tested up to 8 raw moments) are generated with high throughput, using either MWC256 or Xoshiro256+ as uniform PRNG.
 
 Generated normally distributed pseudo-random numbers can be written to a binary file using `genzignor.c`. These numbers have been used successfully for Brownian simulations in [DDM Toolkit](https://github.com/mhvwerts/ddm-toolkit), giving consistent results between the simulation and subsequent DDM analysis of the simulated image stack.
 
 
 ## Suggestions for future work
 
-- Plug in other uniform PRNGs as the random source
-	- see [11] for conversion of random integers to useful floating point
-	- Any of the fast and well-performing generators tested in https://prng.di.unimi.it/
-	- In particular, generators that can perform jumps to allow for parallel streams
+- Add "jump" functions for Xoshiro256+.
+- Use Xoshiro256+ and MWC_52 exclusively (there is almost no speed difference with MWC8222). Rename MWC_52 to MWC256 for consistency.
+- Restructure README.
 - Clean up test programs.
 - Add some PNG figures of the plots generated by the Python scripts to illustrate this document.
 - Additional tests of the quality of the generated normal distribution. The present raw moments test (`test_moments.c`) by McFarland should already be quite good, but further inspiration for tests may be found [here](https://cran.r-project.org/web/packages/RcppZiggurat/vignettes/RcppZiggurat.pdf) and [here](https://www.seehuhn.de/pages/ziggurat.html).
 - Include programs that explicitly test quality of randomness (e.g., see [8] for feeding output to standard random test suites) and normal-ness of generated normally distributed random numbers.
 - [Voss](https://www.seehuhn.de/pages/ziggurat.html) provides a concise and well-structured ziggurat code that may be compiled and compared. The code is part of the GNU Scientific Library ([function `gsl_ran_gaussian_ziggurat()`](https://www.gnu.org/software/gsl/doc/html/randist.html#c.gsl_ran_gaussian_ziggurat).
-- [Kschischang](https://www.comm.utoronto.ca/~frank/ZMG/) has made a very nicely documented and well-structured (yet platform-dependent) C implementation of McFarland's 2016 algorithm. We should try this out. A copy of Kschischang's code package (`zmg-0.90`) be found in the folder `zmg_kschischang`.
+- [Kschischang](https://www.comm.utoronto.ca/~frank/ZMG/) has made a very nicely documented and well-structured (yet platform-dependent) C implementation of McFarland's 2016 algorithm. A copy of Kschischang's code package (`zmg-0.90`) be found in the folder `zmg_kschischang`. In a preliminary (unoptimized) test on Windows (gcc, w64devkit), ZMG (w/ PCG) performed approx. 2.5x slower than ZIGNOR (w/ MWC_52) for generation of large numbers of normally distributed random numbers. We did not investigate further.

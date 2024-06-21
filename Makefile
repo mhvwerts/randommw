@@ -28,7 +28,7 @@ link :
 	$(CC) -o test_minimal.exe $(OBJECTS0) $(OBJECTS4) -lm
 	$(CC) -o test_histogram.exe $(OBJECTS0) $(OBJECTS5) -lm
 	$(CC) -o genzignor.exe $(OBJECTS0) $(OBJECTS1) $(OBJECTS7) -lm
-	$(CC) -o xoshiro_dev.exe $(OBJECTS8)
+	$(CC) -o xoshiro_dev.exe $(OBJECTS8) $(OBJECTS0)
 
 clean :
 	rm *.o

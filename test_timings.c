@@ -12,6 +12,11 @@ void TimerHeader()
 	printf("------------------------------------------------------------------------\n");
 }
 
+void TimerFooter()
+{
+	printf("------------------------------------------------------------------------\n");
+}
+
 void Timer(char *sName, double (*DRan)(), void (*DRanSeed)(uint64_t), unsigned int cM) 
 {
 	unsigned int i;
@@ -45,13 +50,25 @@ int main(void)
 	Timer("MWC_52",			DRan_MWC_52, 			RanSetSeed_MWC8222, cm);
 
 	RanSetRan("MWC8222");
-	Timer("ZIGNOR",			DRanNormalZig, 			RanInit, cm);
+	Timer("ZIGNOR MWC8222",			DRanNormalZig, 			RanInit, cm);
 	
 	RanSetRan("MWC_52");
 	Timer("ZIGNOR MWC_52",	DRanNormalZig, 			RanInit, cm);
 	
 	RanSetRan("MWC8222");
-	Timer("ZIGNOR (again)",	DRanNormalZig, 			RanInit, cm);
-
+	Timer("ZIGNOR MWC8222 (again)",	DRanNormalZig, 			RanInit, cm);
+	
+	RanSetRan("Xoshiro256+");
+	Timer("ZIGNOR Xoshiro256+",	DRanNormalZig, 			RanInit, cm);
+	
+	/* Code snippet to see if the program indeed crashes gracefully if
+	 * wrong string passed to RanSetRan                          */
+	/*
+	RanSetRan("CRASH!! SEGV...");
+	Timer("CRASH!!",	DRanNormalZig, 			RanInit, cm);
+	*/
+	
+	TimerFooter();
+	
 	return 0;
 }
