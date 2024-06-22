@@ -79,7 +79,8 @@ int main(int argc, char *argv[])
 	}
 	
 	// Initialize randommw PRNG system
-	RanInit(SeedZig);
+	printf("seed = %d\n", SeedZig);
+	RanInit((uint64_t)SeedZig);
 
 	// Print the first numbers generated, for visual inspection
 	for (i = 0; i < PREPRINT; i++)

@@ -1,5 +1,4 @@
-evalRanSetSeed result: -9324
-unsigned int size in bytes: 4
+seed = -9324
  -0.966344
  -0.636720
  -0.179258

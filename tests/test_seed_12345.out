@@ -1,5 +1,4 @@
-evalRanSetSeed result: 12345
-unsigned int size in bytes: 4
+seed = 12345
   0.501423
   0.837408
  -1.408617
