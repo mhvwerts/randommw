@@ -3,7 +3,7 @@
 
 ## Description
 
-Numerical simulations for scientific and technological applications regularly require the generation of sequences of (pseudo-)random numbers. This is the case, for instance, for [Monte Carlo methods](https://en.wikipedia.org/wiki/Monte_Carlo_method). Another example is the simulation of the motion of Brownian particles in fluids, where the numbers, in addition to being random, should follow a Gaussian distribution. 
+Numerical simulations for scientific and technological applications regularly require the generation of sequences of (pseudo-)random numbers.[1] This is the case, for instance, for [Monte Carlo methods](https://en.wikipedia.org/wiki/Monte_Carlo_method). Another example is the simulation of the motion of Brownian particles in fluids, where the numbers, in addition to being random, should follow a Gaussian distribution. 
 
 This small C library provides all the basic functionality for such scientific random number generation. It is monolithic: only `randommw.c` and `randommw.h` need to be included in the project, and it does not need any other non-standard library. It is an integrated and curated collection of tried & tested code described in the literature. More background is provided at the end of this README document.
 
