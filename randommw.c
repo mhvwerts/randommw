@@ -14,7 +14,7 @@
  *
  * This source file is organized as follows.
  *
- * A. xoshiro256+ PRNG by Vigna & Blackman
+ * A. xoshiro256+ PRNG by Vigna & Blackman, with splitmix64 for seeding
  * B. modified version of 'zigrandom.c' containing the MWC256 (aka MWC8222)
  *    PRNG, and interfacing functions for 'zignor.c'
  * C. modified version of 'zignor.c' with Doornik's ziggurat algorithm for
@@ -225,6 +225,9 @@ void RanSetSeed_xoshiro256p(uint64_t uSeed)
 	xoshiro256p_s[3] = splitmix64_next();
 }
 
+/* The 32-bit unsigned integer IRan random routine uses only
+   the upper 32 bits of Xoshiro256+, which are of highest
+   random quality, and should pass all randomness tests. */
 uint32_t IRan_xoshiro256p(void)
 {
 	return (uint32_t)(xoshiro256p_next() >> 32);
@@ -254,9 +257,10 @@ double DRan_xoshiro256p(void)
  *  Martinus H. V. Werts, 2024
  *
  *  - Fixed a gcc warning
- *  - Added MWC_52 random number generator, which is a full-precision
- *    generator of random doubles in (0, 1) from pairs of 64-bit unsigned
- *    integers coming from MWC_8222 (= MWC_256)
+  *  - Implemented full 52-bit mantissa precision generator of random doubles
+ *    in (0, 1) from pairs of 32-bit unsignedintegers coming from MWC256
+ *    (Doornik callled this generator "MWC_52")
+ *  - Renamed MWC8222 to MWC256
  *  - Use stdint.h for exact integer widths
  *
  *==========================================================================
@@ -283,7 +287,7 @@ static uint32_t s_uiCarryMWC = MWC_C;
 static uint32_t s_auiStateMWC[MWC_R];
 
 
-void GetInitialSeeds_MWC8222(uint32_t auiSeed[], int32_t cSeed,
+void GetInitialSeeds_MWC256(uint32_t auiSeed[], int32_t cSeed,
 	uint32_t uiSeed, uint32_t uiMin)
 {
 	int i;
@@ -300,21 +304,21 @@ void GetInitialSeeds_MWC8222(uint32_t auiSeed[], int32_t cSeed,
 }
 
 /*
-The MWC8222 generator is initialized and seeded using 
-	RanSetSeed_MWC8222_original(int *piSeed, int cSeed)
+The MWC256 generator is initialized and seeded using 
+	RanSetSeed_MWC256_original(int *piSeed, int cSeed)
 
 If cSeed == MWC_R (currently set at 256), piSeed
 is expected to point to a 256 (MWC_R)-element int array that initializes
-the MWC8222 state.
+the MWC256 state.
 
 Other values for cSeed will go to GetInitialSeeds
 with 256 (MWC_R) and piSeed[0] as parameters
 or just 256 and 0 if piSeed is not intialized or cSeed is 0
 
 Hence, there are three cases here:
-- cSeed == MWC_R: initialize MWC8222 from *piSeed
-- cSeed == 0: initialize MWC8222 using 0 as seed
-- cSeed == 1: initialize MWC8222 using piSeed[0] as seed
+- cSeed == MWC_R: initialize MWC256 from *piSeed
+- cSeed == 0: initialize MWC256 using 0 as seed
+- cSeed == 1: initialize MWC256 using piSeed[0] as seed
 
 Therefore, if a single seed value is used:
 cSeed == 1 and pass a pointer to the seed value
@@ -323,7 +327,7 @@ The seed value is a signed int (32 bits) which is somewhere
 converted implicitly to an unsigned 32 bit int, through
 pointer exchange, conserving all bits
 */ 	
-void RanSetSeed_MWC8222_original(int *piSeed, int cSeed)
+void RanSetSeed_MWC256_original(int *piSeed, int cSeed)
 {
 	s_uiStateMWC = MWC_R - 1;
 	s_uiCarryMWC = MWC_C;
@@ -338,20 +342,20 @@ void RanSetSeed_MWC8222_original(int *piSeed, int cSeed)
 	}
 	else
 	{
-		GetInitialSeeds_MWC8222(s_auiStateMWC, MWC_R, piSeed && cSeed ? piSeed[0] : 0, 0);
+		GetInitialSeeds_MWC256(s_auiStateMWC, MWC_R, piSeed && cSeed ? piSeed[0] : 0, 0);
 	}
 }
 
 // New-style RanSetSeed interface (single unsigned 64-bit integer seed)
-// interfaced to original RanSetSeed for MWC8222
-void RanSetSeed_MWC8222(uint64_t uSeed)
+// interfaced to original RanSetSeed for MWC256
+void RanSetSeed_MWC256(uint64_t uSeed)
 {
 	int iSeed;
 	iSeed = (int)uSeed;
-	RanSetSeed_MWC8222_original(&iSeed, 1);
+	RanSetSeed_MWC256_original(&iSeed, 1);
 }
 
-uint32_t IRan_MWC8222(void)
+uint32_t IRan_MWC256(void)
 {
 	uint64_t t;
 
@@ -361,6 +365,12 @@ uint32_t IRan_MWC8222(void)
 	s_auiStateMWC[s_uiStateMWC] = (uint32_t)t;
     return (uint32_t)t;
 }
+
+/*
+// From the original 'zigrandom.c' by Doornik: 
+// Obsolete 32-bit mantissa precision double random generator, which, 
+// on 64-bit hardware, is only marginally faster than
+// the newer 52-bit mantissa version below.
 
 double DRan_MWC8222(void)
 {
@@ -372,9 +382,10 @@ double DRan_MWC8222(void)
 	s_auiStateMWC[s_uiStateMWC] = (uint32_t)t;
 	return RANDBL_32new(t);
 }
+*/
 
-double DRan_MWC_52(void)
-/* Generate random doubles with full-precision 52-bit mantissa using MWC8222 */
+double DRan_MWC256(void)
+/* Generate random doubles with full-precision 52-bit mantissa using MWC256 */
 {
 	uint64_t t1, t2;
 
@@ -396,10 +407,11 @@ double DRan_MWC_52(void)
 /*------------------- uniform random number generators ----------------------*/
 static int s_cNormalInStore = 0;		     /* > 0 if a normal is in store */
 
-/* Default MWC_52 uniform generator (MWC8222 with 52 bits mantissa) */
-static DRANFUN s_fnDRanu = DRan_MWC_52;
-static IRANFUN s_fnIRanu = IRan_MWC8222;
-static RANSETSEEDFUN s_fnRanSetSeed = RanSetSeed_MWC8222;
+/* Default MWC256 uniform generator 
+   (doubles with 52 bits mantissa randomness) */
+static DRANFUN s_fnDRanu = DRan_MWC256;
+static IRANFUN s_fnIRanu = IRan_MWC256;
+static RANSETSEEDFUN s_fnRanSetSeed = RanSetSeed_MWC256;
 
 double  DRanU(void)
 {
@@ -429,17 +441,11 @@ void    RanSetRan(const char *sRan)
    	s_cNormalInStore = 0;
 	
 	/* BEGIN if ... else if ... else block */
-	if (strcmp(sRan, "MWC8222") == 0)
+	if (strcmp(sRan, "MWC256") == 0)
 	{
-		s_fnDRanu = DRan_MWC8222;
-		s_fnIRanu = IRan_MWC8222;
-		s_fnRanSetSeed = RanSetSeed_MWC8222;
-	}
-	else if (strcmp(sRan, "MWC_52") == 0)
-	{
-		s_fnDRanu = DRan_MWC_52;
-		s_fnIRanu = IRan_MWC8222;
-		s_fnRanSetSeed = RanSetSeed_MWC8222;
+		s_fnDRanu = DRan_MWC256;
+		s_fnIRanu = IRan_MWC256;
+		s_fnRanSetSeed = RanSetSeed_MWC256;
 	}
 	else if (strcmp(sRan, "Xoshiro256+") == 0)
 	{

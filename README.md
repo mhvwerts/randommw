@@ -1,4 +1,4 @@
-# randommw: Monolithic generator of pseudo-random numbers with uniform and Gaussian distributions (in C)
+# randommw: Generator of pseudo-random numbers with uniform or Gaussian distributions (in C)
 
 
 ## Introduction
@@ -14,11 +14,11 @@ Standard PRNGs generally generate uniformly distributed random numbers. Since we
 
 ## Doornik's ziggurat code
 
-A particularly portable, structured and relatively well-documented C code for the generation of normally distributed random numbers is provided by J. A. Doornik.[9] It has been tried and tested independently in the literature.[10] The Doornik code was found to compile and run correctly on both Linux and Windows gcc implementation, and will very likely work with other systems and C compilers. By default, it uses the MWC8222 (more often called MWC256) PRNG as the source of a uniform random variable, which is then converted to a random variable with a Gaussian distribution using a ziggurat algorithm. We used the Doornik ziggurat code as the starting point for our development.
+A particularly portable, structured and relatively well-documented C code for the generation of normally distributed random numbers is provided by J. A. Doornik.[9] It has been tried and tested independently in the literature.[10] The Doornik code was found to compile and run correctly on both Linux and Windows gcc implementation, and will very likely work with other systems and C compilers. By default, it uses Marsaglias's MWC256 (sometimes called MWC8222) PRNG as the source of a uniform random variable, which is then converted to a random variable with a Gaussian distribution using a ziggurat algorithm. We used the Doornik ziggurat code as the starting point for our development.
 
 In the folder `original_ziggurat_code_doornik` the source code of the original [ZIP archive](https://www.doornik.com/research/ziggurat_code.zip) by Doornik is conserved. The compiled executables from the ZIP file have been removed for security reasons, and the "makefile" folders for gcc have been renamed to emphasize the 32-bit *vs* 64-bit nature of the targeted executables. The file contents have been left intact.
 
-The files necessary for development (`zignor.c`, `zignor.h`, `zigrandom.c` and `zigrandom.h`) have been copied from `original_ziggurat_code_doornik` to the root folder. `zignor` and `zigrandom` have undergone minor  modifications, and were then merged into `randommw`. The modifications only concern the structure of the code, not the fundamental algorithms. A function `DRan_MWC_52()` was added which generates random doubles with full 52-bit mantissa resolution (instead of 32-bit) via two iterations of the MWC8222 generator (see [11]). The resulting 'MWC_52' generator is now used by default.
+The files necessary for development (`zignor.c`, `zignor.h`, `zigrandom.c` and `zigrandom.h`) have been copied from `original_ziggurat_code_doornik` to the root folder. `zignor` and `zigrandom` were merged into `randommw` and have undergone some changes. The modifications only concern the structure of the code, not the fundamental algorithms. The MWC8222 routines have been renamed to MWC256. The function`DRan_MWC256()` generates random doubles with full 52-bit mantissa resolution (instead of 32-bit in Doornik's original) via two iterations of the MWC256 generator (see [11]).
 
 [1] D. Jones, "Good Practice in (Pseudo) Random Number Generation for
 Bioinformatics Applications", http://www0.cs.ucl.ac.uk/staff/d.jones/GoodPracticeRNG.pdf
@@ -46,7 +46,7 @@ Bioinformatics Applications", http://www0.cs.ucl.ac.uk/staff/d.jones/GoodPractic
 
 ## Usage
 
-For simple generation of normally distributed random numbers (double precision), only `randommw.c` and `randommw.h` are needed. By default, this uses the MWC_52 uniform PRNG, which should be suitable for many applications. 
+For simple generation of normally distributed random numbers (double precision), only `randommw.c` and `randommw.h` are needed. By default, this uses the MWC256 uniform PRNG, which should be suitable for most applications. 
 
 Here is a minimal example, which only uses two fucntions: `RanInit()` for initialization and `DRanNormalZig()` for normally-distributed random numbers.
 
@@ -73,7 +73,7 @@ int main(void) {
 
 ### `void RanInit(uint64_t uSeed)`
 
-Initialize the ziggurat algorithm and set the random seed for the underlying random number generator. The default generator is MWC_52 (which is MWC8222 with 52-bit random mantissa for floating point doubles). If a different generator is desired, call `RanSetRan()` before `RanInit()`.
+Initialize the ziggurat algorithm and set the random seed for the underlying random number generator. The default generator is MWC256 (with 52-bit random mantissa for floating point doubles). If a different generator is desired, call `RanSetRan()` before `RanInit()`.
 
 The random seed `uSeed` is always an unsigned 64-bit integer, independently of the specific random number generator. A PRNG-specific routine uses this seed to fully initialize the PRNG.
 
@@ -97,7 +97,7 @@ Calculate and return the next random number in the normally distributed sequence
 
 ### `double DRanU(void)`
 
-Obtain a double-precision floating point random number from a uniform distribution (0, 1) using the active PRNG. Full 52-bit mantissa randomness (except if you are using the legacy MWC8222 generator).
+Obtain a double-precision floating point random number from a uniform distribution (0, 1) using the active PRNG. Full 52-bit mantissa randomness.
 
 
 ### `uint32_t IranU(void)`
@@ -107,7 +107,7 @@ Obtain an unsigned 32-bit integer random number from the active PRNG.
 
 ### `void RanSetRan(const char *sRan)`
 
-Choose the uniform pseudo-random number generator that feeds the ziggurat algorithm. At present, the choices are `"MWC8222"`, `"MWC_52"` and `"Xoshiro256+"`. The string is case-sensitive, and should correspond exactly to one of these three; else, your program will crash. 
+Choose the uniform pseudo-random number generator that feeds the ziggurat algorithm. At present, the only choices are `"MWC256"` and `"Xoshiro256+"`. The string is case-sensitive, and should correspond exactly to one of these options; else, your program will crash. 
 
 After calling `RanSetRan()`, you should call `RanInit()` (again). Or, put differently, `RanSetRan()` should be called before `RanInit()`.
 
@@ -127,11 +127,10 @@ Generated normally distributed pseudo-random numbers can be written to a binary 
 ## Suggestions for future work
 
 - Add "jump" functions for Xoshiro256+.
-- Use Xoshiro256+ and MWC_52 exclusively (there is almost no speed difference with MWC8222). Rename MWC_52 to MWC256 for consistency.
 - Restructure README.
 - Clean up test programs.
 - Add some PNG figures of the plots generated by the Python scripts to illustrate this document.
 - Additional tests of the quality of the generated normal distribution. The present raw moments test (`test_moments.c`) by McFarland should already be quite good, but further inspiration for tests may be found [here](https://cran.r-project.org/web/packages/RcppZiggurat/vignettes/RcppZiggurat.pdf) and [here](https://www.seehuhn.de/pages/ziggurat.html).
 - Include programs that explicitly test quality of randomness (e.g., see [8] for feeding output to standard random test suites) and normal-ness of generated normally distributed random numbers.
 - [Voss](https://www.seehuhn.de/pages/ziggurat.html) provides a concise and well-structured ziggurat code that may be compiled and compared. The code is part of the GNU Scientific Library ([function `gsl_ran_gaussian_ziggurat()`](https://www.gnu.org/software/gsl/doc/html/randist.html#c.gsl_ran_gaussian_ziggurat).
-- [Kschischang](https://www.comm.utoronto.ca/~frank/ZMG/) has made a very nicely documented and well-structured (yet platform-dependent) C implementation of McFarland's 2016 algorithm. A copy of Kschischang's code package (`zmg-0.90`) be found in the folder `zmg_kschischang`. In a preliminary (unoptimized) test on Windows (gcc, w64devkit), ZMG (w/ PCG) performed approx. 2.5x slower than ZIGNOR (w/ MWC_52) for generation of large numbers of normally distributed random numbers. We did not investigate further.
+- [Kschischang](https://www.comm.utoronto.ca/~frank/ZMG/) has made a very nicely documented and well-structured (yet platform-dependent) C implementation of McFarland's 2016 algorithm. A copy of Kschischang's code package (`zmg-0.90`) be found in the folder `zmg_kschischang`. In a preliminary (unoptimized) test on Windows (gcc, w64devkit), ZMG (w/ PCG) performed approx. 2.5x slower than ZIGNOR (w/ MWC256) for generation of large numbers of normally distributed random numbers.

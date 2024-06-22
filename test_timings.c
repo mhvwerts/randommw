@@ -24,7 +24,7 @@ void Timer(char *sName, double (*DRan)(), void (*DRanSeed)(uint64_t), unsigned i
 	
 	printf("%-29s", sName);
 
-	(*DRanSeed)(0);
+	(*DRanSeed)(12345);
 
 	StartTimer();
 	for (i = 0, mean = 0.0; i < cM; ++i)
@@ -45,21 +45,19 @@ int main(void)
 
 	TimerHeader();
 
-	Timer("Warming up",		DRan_MWC8222, 			RanSetSeed_MWC8222, cm/10); 
-	Timer("MWC8222",		DRan_MWC8222, 			RanSetSeed_MWC8222, cm);
-	Timer("MWC_52",			DRan_MWC_52, 			RanSetSeed_MWC8222, cm);
+	Timer("Warming up",		DRan_MWC256, 			RanSetSeed_MWC256, cm/10); 
+	Timer("MWC256",			DRan_MWC256, 			RanSetSeed_MWC256, cm);
+	Timer("Xoshiro256+",	DRan_xoshiro256p,		RanSetSeed_xoshiro256p, cm);
 
-	RanSetRan("MWC8222");
-	Timer("ZIGNOR MWC8222",			DRanNormalZig, 			RanInit, cm);
-	
-	RanSetRan("MWC_52");
-	Timer("ZIGNOR MWC_52",	DRanNormalZig, 			RanInit, cm);
-	
-	RanSetRan("MWC8222");
-	Timer("ZIGNOR MWC8222 (again)",	DRanNormalZig, 			RanInit, cm);
+	RanSetRan("MWC256");
+	Timer("ZIGNOR MWC256",			DRanNormalZig, 			RanInit, cm);
 	
 	RanSetRan("Xoshiro256+");
-	Timer("ZIGNOR Xoshiro256+",	DRanNormalZig, 			RanInit, cm);
+	Timer("ZIGNOR Xoshiro256+",		DRanNormalZig, 			RanInit, cm);
+	
+	RanSetRan("MWC256");
+	Timer("ZIGNOR MWC256 (again)",	DRanNormalZig, 			RanInit, cm);
+
 	
 	/* Code snippet to see if the program indeed crashes gracefully if
 	 * wrong string passed to RanSetRan                          */
