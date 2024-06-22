@@ -1,3 +1,7 @@
+/* zigtimer.c
+
+   with small modifications by Werts, 2024 */
+
 /*==========================================================================
  *  This code is Copyright (C) 2005, Jurgen A. Doornik.
  *  Permission to use this code for non-commercial purposes
@@ -41,7 +45,7 @@ clock_t unix_clock (void)
 #define CLOCKS_PER_SEC (sysconf (_SC_CLK_TCK))
 #endif
 
-static char s_sTime[24];
+static char s_sTime[32];
 static clock_t s_clockStart, s_clockStop;
 static double s_dClockPerHundred = 0;
 
@@ -85,14 +89,19 @@ static char *  GetTimeSpan(double dTime2, double dTime1)
         bzeros = 1;
     }
     if (m || tnew)
-    {   sprintf(s_sTime + len, bzeros ? "%02d:" : "%2d:", m);  len += 3;
+    {   sprintf(s_sTime + len, bzeros ? "%02d'" : "%2d'", m);  len += 3;
         bzeros = 1;
     }
     sprintf(s_sTime + len, bzeros ? "%02d" : "%2d", s); len += 2;
     if (h)
-        sprintf(s_sTime + len, ".%02d", h);
-
-return s_sTime;
+	{
+		sprintf(s_sTime + len, ".%02d", h); len += 3;
+	}
+	if (!(m || tnew))
+	{
+		sprintf(s_sTime + len, " s"); len += 2;
+	}	
+	return s_sTime;
 }
 char * GetLapsedTime(void)
 {

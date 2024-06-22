@@ -53,7 +53,7 @@ int main(int argc, char **argv)
 		dbuf[i] = DRanNormalZig();
 	StopTimer();
 	
-	printf("Random generation : %s seconds\n", GetLapsedTime());
+	printf("Random generation : %s\n", GetLapsedTime());
 	printf("-------------------------------------\n");	
 	
 	StartTimer();
@@ -62,7 +62,7 @@ int main(int argc, char **argv)
 	fclose(fp);
 	StopTimer();
 	
-	printf("File output       : %s seconds\n", GetLapsedTime());
+	printf("File output       : %s\n", GetLapsedTime());
 	printf("-------------------------------------\n\n");	
 	
 	free(dbuf);

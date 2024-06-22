@@ -225,6 +225,13 @@ void RanSetSeed_xoshiro256p(uint64_t uSeed)
 	xoshiro256p_s[3] = splitmix64_next();
 }
 
+void RanJump_xoshiro256p(uint64_t uJumps)
+{
+	uint64_t i;
+	for (i=0; i<uJumps; i++)
+		xoshiro256p_long_jump();
+}
+
 /* The 32-bit unsigned integer IRan random routine uses only
    the upper 32 bits of Xoshiro256+, which are of highest
    random quality, and should pass all randomness tests. */
@@ -429,7 +436,9 @@ void    RanSetSeed(uint64_t uSeed)
 	(*s_fnRanSetSeed)(uSeed);
 }
 
-/* keep PRNG jumps for later
+/* keep generalized PRNG jumps for later
+// jumps currently only supported by Xoshiro256+
+// call RanJump_xoshiro256p() directly
 void    RanJump(uint64_t uJumpsize)
 {
 	(*s_fnRanJump)(uJumpsize);
