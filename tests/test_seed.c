@@ -79,6 +79,8 @@ int main(int argc, char *argv[])
 	}
 	
 	// Initialize randommw PRNG system
+	// RanSetRan("Xoshiro256+"); printf("Xoshiro256+ activated.\n");
+	// RanSetRan("Splitmix64"); printf("Splitmix64 activated.\n");
 	printf("seed = %d\n", SeedZig);
 	RanInit((uint64_t)SeedZig);
 

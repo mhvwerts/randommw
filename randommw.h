@@ -38,6 +38,11 @@ double DRan_xoshiro256p(void);
 // jumps currently only supported by Xoshiro256+
 void RanJump_xoshiro256p(uint64_t uJumps); 
 
+/* splitmix64 */
+void RanSetSeed_splitmix64(uint64_t uSeed);
+uint32_t IRan_splitmix64(void);
+double DRan_splitmix64(void);
+
 /* MWC256 (aka MWC8222) George Marsaglia */
 void RanSetSeed_MWC256(uint64_t uSeed);
 uint32_t IRan_MWC256(void);

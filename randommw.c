@@ -14,7 +14,7 @@
  *
  * This source file is organized as follows.
  *
- * A. xoshiro256+ PRNG by Vigna & Blackman, with splitmix64 for seeding
+ * A. xoshiro256+ PRNG by Vigna & Blackman, and splitmix64 PRNG
  * B. modified version of 'zigrandom.c' containing the MWC256 (aka MWC8222)
  *    PRNG, and interfacing functions for 'zignor.c'
  * C. modified version of 'zignor.c' with Doornik's ziggurat algorithm for
@@ -35,10 +35,10 @@
 
 
 /*==========================================================================
- * xoshiro256+
+ * xoshiro256+ and splitmix64
  *
- * xoshiro256+ for the generation of 32-bit unsigned integers and 53-bit 
- * mantissa doubles
+ * xoshiro256+ and splitmix64 for the generation of 32-bit unsigned integers 
+ * and 53-bit mantissa doubles
  *
  * see: https://prng.di.unimi.it/
  *
@@ -172,6 +172,10 @@ void xoshiro256p_long_jump(void) {
  *
  * Can be used to generate a 4 x 64-bit seed for xoshiro256+
  * from a single 64-bit seed
+ *
+ * And can also be used in its own right to generate random 
+ * numbers, as it has also been reported to pass statistical tests
+ * (https://github.com/lemire/testingRNG)
  * 
  * names of global variables and functions were adapted (Werts, 2024)
  *----------------------------------------------------------------*/
@@ -216,7 +220,7 @@ uint64_t splitmix64_next() {
 
 void RanSetSeed_xoshiro256p(uint64_t uSeed)
 {
-	splitmix64_x = uSeed; // seed splitmix
+	RanSetSeed_splitmix64(uSeed); // seed splitmix
 	
 	// use splitmix to fully seed xoshiro256p
 	xoshiro256p_s[0] = splitmix64_next();
@@ -255,6 +259,35 @@ double DRan_xoshiro256p(void)
 	
 	return (xx * 0x1.0p-53);
 }
+
+
+
+/*----------------------------------------------------------------
+ * Interface between splitmix64 and zigrandom
+ *  based on the xoshiro256+ interface
+ *----------------------------------------------------------------*/
+
+void RanSetSeed_splitmix64(uint64_t uSeed)
+{
+	splitmix64_x = uSeed; // seed splitmix
+}
+
+uint32_t IRan_splitmix64(void)
+{
+	return (uint32_t)(splitmix64_next() >> 32);
+}
+
+double DRan_splitmix64(void)
+{
+	uint64_t xx;
+	
+	while ((xx = (splitmix64_next() >> 11)) == 0)
+		;
+	
+	return (xx * 0x1.0p-53);
+}
+
+
 
 /*==========================================================================*/
 
@@ -461,6 +494,12 @@ void    RanSetRan(const char *sRan)
 		s_fnDRanu = DRan_xoshiro256p;
 		s_fnIRanu = IRan_xoshiro256p;
 		s_fnRanSetSeed = RanSetSeed_xoshiro256p;
+	}
+	else if (strcmp(sRan, "Splitmix64") == 0)
+	{
+		s_fnDRanu = DRan_splitmix64;
+		s_fnIRanu = IRan_splitmix64;
+		s_fnRanSetSeed = RanSetSeed_splitmix64;
 	}
 	else // DEFAULT
 	{
