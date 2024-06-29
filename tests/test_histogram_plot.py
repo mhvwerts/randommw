@@ -24,8 +24,14 @@ with open(fp, "rb") as f:
 # normalize the Gaussian to fit the histogram
 A =  H.sum() * (HV.max()-HV.min()) / (Nbins-1) 
 
-plt.figure(1)
+plt.figure(1, figsize = (5.5,3.8))
 plt.clf()
-plt.semilogy(HV, H, '.')
-plt.semilogy(HV, A/np.sqrt(np.pi*2) * np.exp(-0.5*HV**2), 'r-')
-plt.savefig(fo, dpi = 300)
+plt.title("Histogram (log) {0:d} Gaussian PRNG samples".format(H.sum()))
+plt.semilogy(HV, H, '.',
+             label = 'PRNG histogram')
+plt.semilogy(HV, A/np.sqrt(np.pi*2) * np.exp(-0.5*HV**2), 'r-',
+             label = 'theor. distribution')
+plt.xlabel('random value')
+plt.ylabel('number of occurrences')
+plt.legend(loc='lower center', frameon=False)
+plt.savefig(fo, dpi = 150)
