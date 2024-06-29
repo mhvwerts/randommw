@@ -9,6 +9,8 @@ This small C library provides all the basic functionality for such scientific ra
 
 The library includes four different generators of uniformly distributed pseudo-random numbers: MWC256, Xoshiro256+, MELG19937-64 and Splitmix64. These have been reported to pass the relevant statistical tests.[12][14][17] There is a ziggurat algorithm, coded by J. A. Doornik,[9] for obtaining random numbers with a Gaussian distribution. The quality of the generated Gaussian distributions has been checked via their raw moments, following McFarland.[10]
 
+![Histogram of Gaussian PRNG samples](./tests/histogram.png)
+
 
 ## Usage
 
