@@ -58,7 +58,8 @@ int main(void)
 
 	// Initialize the PRNG (seed) and Ziggurat algorithm
 	// RanSetRan("Xoshiro256+"); printf("Xoshiro256+ activated.\n");
-	RanSetRan("Splitmix64"); printf("Splitmix64 activated.\n");
+	// RanSetRan("Splitmix64"); printf("Splitmix64 activated.\n");
+	RanSetRan("MELG19937"); printf("MELG19937 activated.\n");
 	RanInit(0);
 
 	// Print the first numbers generated, for visual inspection

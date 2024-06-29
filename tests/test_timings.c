@@ -24,7 +24,7 @@ void Timer(char *sName, double (*DRan)(), void (*DRanSeed)(uint64_t), unsigned i
 	
 	printf("%-29s", sName);
 
-	(*DRanSeed)(1773);
+	(*DRanSeed)(17732);
 
 	StartTimer();
 	for (i = 0, mean = 0.0; i < cM; ++i)
@@ -49,6 +49,7 @@ int main(void)
 	Timer("MWC256",			DRan_MWC256, 			RanSetSeed_MWC256, cm);
 	Timer("Xoshiro256+",	DRan_xoshiro256p,		RanSetSeed_xoshiro256p, cm);
 	Timer("Splitmix64",     DRan_splitmix64,		RanSetSeed_splitmix64, cm);
+	Timer("MELG19937",     	DRan_MELG19937,			RanSetSeed_MELG19937, cm);
 
 	RanSetRan("MWC256");
 	Timer("ZIGNOR MWC256",			DRanNormalZig, 			RanInit, cm);
@@ -58,6 +59,9 @@ int main(void)
 	
 	RanSetRan("Splitmix64");
 	Timer("ZIGNOR Splitmix64",		DRanNormalZig, 			RanInit, cm);
+	
+	RanSetRan("MELG19937");
+	Timer("ZIGNOR MELG19937",		DRanNormalZig, 			RanInit, cm);
 	
 	RanSetRan("MWC256");
 	Timer("ZIGNOR MWC256 (again)",	DRanNormalZig, 			RanInit, cm);

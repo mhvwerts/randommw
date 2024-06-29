@@ -4,7 +4,9 @@
  * extensions
  *
  * - MWC8222 has been renamed to MWC256
- * - Xoshiro256+ PRNG has been added
+ * - Xoshiro256+ PRNG has been added (64 bit)
+ * - Splitmix64 PRNG has been added (64 bit)
+ * - MELG19937-64 PRNG has been added (64 bit)
  *
  * Werts, 2024
  *==========================================================================*/
@@ -31,11 +33,16 @@
     ((int)(iRan1) * M_RAN_INVM32 + (0.5 + M_RAN_INVM52 / 2) + \
         (int)((iRan2) & 0x000FFFFF) * M_RAN_INVM52)
 
-/* xoshiro256+ Blackman & Vigna*/
+/* MELG19937-64 Harase & Kimoto */
+void RanSetSeed_MELG19937(uint64_t uSeed);
+uint32_t IRan_MELG19937(void);
+double DRan_MELG19937(void);
+void RanJump_MELG19937(uint64_t uJumps); 
+
+/* xoshiro256+ Blackman & Vigna */
 void RanSetSeed_xoshiro256p(uint64_t uSeed);
 uint32_t IRan_xoshiro256p(void);
 double DRan_xoshiro256p(void);
-// jumps currently only supported by Xoshiro256+
 void RanJump_xoshiro256p(uint64_t uJumps); 
 
 /* splitmix64 */
@@ -52,12 +59,14 @@ double DRan_MWC256(void);
 typedef double 		( * DRANFUN)(void);
 typedef uint32_t 	( * IRANFUN)(void);
 typedef void   		( * RANSETSEEDFUN)(uint64_t);
+typedef void   		( * RANJUMPFUN)(uint64_t);
 
 void    RanSetRan(const char *sRan);
 void    RanSetRanExt(DRANFUN DRanFun, IRANFUN IRanFun, RANSETSEEDFUN RanSetSeedFun);
 double  DRanU(void);
 uint32_t  IRanU(void);
 void    RanSetSeed(uint64_t uSeed);
+void    RanJumpRan(uint64_t uJumpsize);
 
 /* normal probabilities */
 double  DProbNormal(double x);

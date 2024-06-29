@@ -49,7 +49,8 @@ int main(int argc, char **argv)
 			return(1);
 	}
 
-	RanSetRan("Xoshiro256+");
+	RanSetRan("Xoshiro256+"); printf("Xoshiro256+ activated.\n");
+	// RanSetRan("MELG19937"); printf("MELG19937 activated.\n");
 	RanInit(zigseed);
 	
 	printf("\n");
@@ -59,11 +60,11 @@ int main(int argc, char **argv)
 	}
 	
 	printf("\n");
-	printf("*** %"PRIu64" long jumps of Xoshiro256+ ***\n", Njumps);
+	printf("*** %"PRIu64" long jumps of PRNG ***\n", Njumps);
 	printf("\n");
 	
 	StartTimer();
-	RanJump_xoshiro256p(Njumps);
+	RanJumpRan(Njumps);
 	StopTimer();
 	
 	for(i = 0; i < 20; i++)	{
@@ -72,7 +73,7 @@ int main(int argc, char **argv)
 	}
 	printf("\n");
 	
-	printf("%"PRIu64" long jumps of Xoshiro256+ in %s\n\n", 
+	printf("%"PRIu64" long jumps of PRNG in %s\n\n", 
 	       Njumps, GetLapsedTime());
 
 	return 0;

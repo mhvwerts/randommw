@@ -66,8 +66,11 @@ int main(int argc, char *argv[])
 			printf("usage: %s [<Nsamples> <seed>]\n", argv[0]);
 			return(1);
 	}
+
+	// RanSetRan("Xoshiro256+"); printf("Xoshiro256+ activated.\n");
+	// RanSetRan("Splitmix64"); printf("Splitmix64 activated.\n");
+	RanSetRan("MELG19937"); printf("MELG19937 activated.\n");
 	
-	RanSetRan("Xoshiro256+"); printf("Xoshiro256+ activated.\n");
 	RanInit((uint64_t) zigseed);
 	
 	// Print the first numbers generated, for visual inspection

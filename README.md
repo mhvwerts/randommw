@@ -3,20 +3,18 @@
 
 ## Description
 
-Numerical simulations for scientific and technological applications regularly require the generation of sequences of (pseudo-)random numbers.[1] This is the case, for instance, for [Monte Carlo methods](https://en.wikipedia.org/wiki/Monte_Carlo_method). Another example is the simulation of the motion of Brownian particles in fluids, where the numbers, in addition to being random, should follow a Gaussian distribution. 
+Numerical simulations for scientific and technological applications regularly require the generation of sequences of (pseudo-)random numbers.[1] This is the case, for instance, for [Monte Carlo methods](https://en.wikipedia.org/wiki/Monte_Carlo_method).[16] Another example is the simulation of the motion of Brownian particles in fluids, where the numbers, in addition to being random, should follow a Gaussian distribution. 
 
 This small C library provides all the basic functionality for such scientific random number generation. It is monolithic: only `randommw.c` and `randommw.h` need to be included in the project, and it does not need any other non-standard library. It is an integrated and curated collection of tried & tested code described in the literature. More background is provided at the end of this README document.
 
-The library includes three different fast generators of uniformly distributed pseudo-random numbers: MWC256, Xoshiro256+ and Splitmix64, which have been reported to pass the relevant statistical tests.[12][14] There is a ziggurat algorithm, coded by J. A. Doornik,[9] for obtaining random numbers with a Gaussian distribution. The quality of the generated Gaussian distributions has been checked via their raw moments, following McFarland.[10]
+The library includes four different generators of uniformly distributed pseudo-random numbers: MWC256, Xoshiro256+, MELG19937-64 and Splitmix64. These have been reported to pass the relevant statistical tests.[12][14][17] There is a ziggurat algorithm, coded by J. A. Doornik,[9] for obtaining random numbers with a Gaussian distribution. The quality of the generated Gaussian distributions has been checked via their raw moments, following McFarland.[10]
 
 
 ## Usage
 
 ### Minimal example
 
-For simple generation of normally distributed random numbers (double precision), only `randommw.c` and `randommw.h` are needed. By default, this uses the MWC256 uniform PRNG, which should be suitable for most applications. 
-
-Here is a minimal example, which only uses two fucntions: `RanInit()` for initialization and `DRanNormalZig()` for normally-distributed random numbers.
+Here is a minimal example, which only uses two functions: `RanInit()` for initialization and `DRanNormalZig()` for normally-distributed random numbers (full 'double' precision values between 0.0 and 1.0). By default, this uses the MWC256 uniform PRNG, which should be suitable for most applications.
 
 ```c
 #include <stdio.h>
@@ -75,11 +73,15 @@ Obtain an unsigned 32-bit integer random number from the active PRNG.
 
 ### `void RanSetRan(const char *sRan)`
 
-Choose the uniform pseudo-random number generator that feeds the ziggurat algorithm. At present, the possible choices are `"MWC256"`, `"Xoshiro256+"` and `"Splitmix64"`. The string is case-sensitive, and should correspond exactly to one of these options; else, your program will crash. 
+Choose the uniform pseudo-random number generator that feeds the ziggurat algorithm. At present, the possible choices are `"MWC256"`, `"Xoshiro256+"`,`"MELG19937"` and `"Splitmix64"`. The string is case-sensitive, and should correspond exactly to one of these options; else, your program will crash. 
 
 After calling `RanSetRan()`, you should call `RanInit()` (again). Or, put differently, `RanSetRan()` should be called before `RanInit()`.
 
-If you use `"Xoshiro256+"`, you can perform "long jumps" using `void RanJump_xoshiro256p(uint64_t uJumps)`. Each of the `uJumps` long jumps forwards the PRNG by 2^192 steps, giving access to an independent stream of random numbers.
+### `void RanJumpRan(uint64_t uJumpsize)`
+
+If you use `"Xoshiro256+"` or `"MELG19937"`, you can perform long "jumps" of the generator using `RanJumpRan(uint64_t uJumps)`. Each of the `uJumps` jumps fast-forwards the PRNG by 2^192 (Xoshiro256+) or 2^256 (MELG19937) steps, giving access to an independent stream of random numbers. This mechanism, often called "splitting", is of importance for reliable parallelization of computer simulations.[16] 
+
+Don't jump using a generator that does not support it: your program will brutally crash with a segmentation fault! The Splitmix64 implementation by Vigna used presently in our code does not support jumping/splitting (in spite of its name).
 
 
 ## Compilation, development and testing
@@ -89,7 +91,7 @@ At present, the development uses `gcc` exclusively, both on Windows via [mingw-w
 
 ## Status 
 
-We are working towards basic usage and validation of the PRNG for normally distributed numbers in numerical simulations of colloidal systems. The code is functional and is now contained in a monolithic module (`randommw.c`) that can be easily included in a scientific computing project in C. The random numbers have a good Gaussian distribution (tested up to 8 raw moments, see `tests/test_moments.c`). They are generated with high throughput, using MWC256, Xoshiro256+ or Splitmix64 as uniform PRNG.
+We are working towards basic usage and validation of the PRNG for normally distributed numbers in numerical simulations of colloidal systems. The code is functional and is now contained in a monolithic module (`randommw.c`) that can be easily included in a scientific computing project in C. The random numbers have a good Gaussian distribution (tested up to 8 raw moments, see `tests/test_moments.c`). They are generated with high throughput, using MWC256, Xoshiro256+, MELG19937-64 or Splitmix64 as underlying uniform PRNG.
 
 Generated normally distributed pseudo-random numbers can be written to a binary file using `genzignor.c`. These numbers have been used successfully for Brownian simulations in [DDM Toolkit](https://github.com/mhvwerts/ddm-toolkit), giving consistent results between the simulation and subsequent DDM analysis of the simulated image stack.
 
@@ -108,7 +110,7 @@ The numerical simulation of the Brownian motion of colloidal nanoparticles needs
 
 The choice of the algorithm for the generation of pseudo-random numbers is essential to the success of the numerical simulation.[1] There are many pseudo-random number generators (PRNGs) to choose from and new ones are still appearing.[2] Luckily, there are scientists specialized in testing these PRNGs, and specific test programs for PRNGs have been developed.[3][4][5] However, it is not always very clear to the unsuspecting consumer of PRNGs how to choose. Some developers are going so far as to give the impression that their PRNG algorithm is "the best" and all other algorithms are "not good". There is probably some sociology involved in as to how certain algorithms become the standard PRNG in scientific environments such as Python/numpy, Fortran and Julia. The details about PRNGs are somewhat hidden to the casual user of Python and other high-level languages, yet it is important to be aware and explicit about choosing PRNGs.
 
-The diversity of PRNGs in modern scientific computing is a strength, especially with open source code, and any serious flaw in PRNGs for scientific computing will very likely be detected.[6] Also, it is elusive to look for "the best" PRNG, but one should at least find one that is "good enough" for the particular purpose. A PRNG for Brownian simulation can be good enough, while still failing certain very stringent statistical tests. A look in the literature and discussions with colleagues doing molecular dynamic simulations shows that currently the Mersenne Twister (MT19337) is often used. This does not mean that other generators such as PCG64 and Xoshiro256++ will not work. For instance, we have interchangeably used MT19937 and PCG64 in basic Brownian simulations,[7] with equal success. On the other hand, some older PRNGs have been shown to be of insufficient quality.[1][6]
+The diversity of PRNGs in modern scientific computing is a strength, especially with open source code, and any serious flaw in PRNGs for scientific computing will very likely be detected.[6] Also, it is elusive to look for "the best" PRNG, but one should at least find one that is "good enough" for the particular purpose. A PRNG for Brownian simulation can be good enough, while still failing certain very stringent statistical tests. A look in the literature and discussions with colleagues doing molecular dynamic simulations shows that currently the Mersenne Twister (MT19337) is often used. This does not mean that other generators such as PCG64 and Xoshiro256++ will not work. For instance, we have interchangeably used MT19937 and PCG64 in basic Brownian simulations,[7] with equal success. On the other hand, some older PRNGs have been shown to be of insufficient quality in certain applications such as molecular dynamics or Monte Carlo simulations.[1][6][15]
 
 Standard PRNGs generally generate uniformly distributed random numbers. Since we need a normal distribution for Brownian simulation, the initial uniform should be converted into a random with a Gaussian distribution. There are several ways to do this,[8] with the [Box-Muller transform](https://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform) and the [ziggurat algorithm](https://en.wikipedia.org/wiki/Ziggurat_algorithm) being amongst the most well-known methods. Several modifications of the ziggurat algorithm now exist, improving statistical properties and/or numerical performance.[9][10] 
 
@@ -126,7 +128,7 @@ The files necessary for development (`zignor.c`, `zignor.h`, `zigrandom.c` and `
 
 Many implementations of ziggurat algorithms for generation of normally distributed numbers from a uniform PRNG can be found on the Internets. Here are two well-documented and reliable examples.
 
-- [Kschischang](https://www.comm.utoronto.ca/~frank/ZMG/) has made a very nicely documented and well-structured (yet platform-dependent) C implementation of McFarland's 2016 [10] ziggurat algorithm. A copy of Kschischang's code package (`zmg-0.90`) is located in the folder `zmg_kschischang`. In a preliminary (unoptimized) test on Windows (gcc, w64devkit), ZMG (w/ PCG64) performed approx. 2.5x slower than ZIGNOR (w/ MWC256, Splitmix64 or Xoshiro256+) for generation of large numbers of normally distributed random numbers.
+- [Kschischang](https://www.comm.utoronto.ca/~frank/ZMG/) has made a very nicely documented and well-structured (yet platform-dependent) C implementation of McFarland's 2016 [10] ziggurat algorithm. A copy of Kschischang's code package (`zmg-0.90`) is located in the folder `zmg_kschischang`. In a preliminary (unoptimized) test on Windows (gcc, w64devkit), ZMG (w/ PCG64) performed approx. 2.5x slower than ZIGNOR (w/ MWC256) for generation of large numbers of normally distributed random numbers.
 
 - [Voss](https://www.seehuhn.de/pages/ziggurat.html) provides a concise and well-structured ziggurat code that is part of the GNU Scientific Library ([function `gsl_ran_gaussian_ziggurat()`](https://www.gnu.org/software/gsl/doc/html/randist.html#c.gsl_ran_gaussian_ziggurat) ). It is based on the original algorithm by Marsaglia & Tsang,[13] with some simplifications, and might suffer from the same minor randomness problems.[9]
 
@@ -162,3 +164,10 @@ Bioinformatics Applications", http://www0.cs.ucl.ac.uk/staff/d.jones/GoodPractic
 [13] G. Marsaglia and W. W. Tsang, "The Ziggurat Method for Generating Random Variables", Journal of Statistical Software 2000, 5, 1-7. https://doi.org/10.18637/jss.v005.i08
 
 [14] https://github.com/lemire/testingRNG
+
+[15] A.M. Ferrenberg, D. P. Landau, D. P., Y. J. Wong, "Monte Carlo Simulations: Hidden Errors from ‘“Good”’ Random Number Generators", Phys. Rev. Lett. 1992, 69, 3382–3384. doi:10.1103/PhysRevLett.69.3382.
+
+[16] H. Bauke, S. Mertens, "Random Numbers for Large-Scale Distributed Monte Carlo Simulations", Phys. Rev. E 2007, 75, 066701. doi:10.1103/PhysRevE.75.066701.
+
+[17] S. Harase, T. Kimoto, "Implementing 64-Bit Maximally Equidistributed F 2 -Linear Generators with Mersenne Prime Period", ACM Trans. Math. Softw. 2018, 44, 1–11. doi:10.1145/3159444.
+
