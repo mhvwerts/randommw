@@ -21,7 +21,7 @@ The library includes four different generators of uniformly distributed pseudo-r
 
 ### Minimal example
 
-Here is a minimal example, which only uses two functions: `RanInit()` for initialization and `DRanNormalZig()` for normally-distributed random numbers (full 'double' precision values between 0.0 and 1.0). By default, this uses the MWC256 uniform PRNG, which should be suitable for most applications.
+Here is a minimal example, which only uses two functions: `RanInit()` for initialization and `DRanNormalZig()` for normally-distributed random numbers ('full double precision' floating point values). By default, this uses the MWC256 uniform PRNG, which should be suitable for most applications.
 
 ```c
 #include <stdio.h>
