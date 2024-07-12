@@ -745,7 +745,8 @@ double DRan_splitmix64(void)
 
 /*==========================================================================
  *  Modified version of zigrandom.c
- *  Martinus H. V. Werts, 2024
+ *  original code by J. A. Doornik, 2005
+ *  modifications by M. H. V. Werts, 2024
  *
  *  - Fixed a gcc warning
   *  - Implemented full 52-bit mantissa precision generator of random doubles
@@ -1102,7 +1103,8 @@ double  FRanQuanNormal(void)
 
 /*==========================================================================
  *  Modified version of zignor.c
- *  Martinus H. V. Werts, 2024
+ *  original code by J. A. Doornik, 2005
+ *  modifications by M. H. V. Werts, 2024
  *
  *  - VIZIGNOR and related optimizations have been removed
  *
@@ -1197,7 +1199,7 @@ double  DRanQuanNormalZig(void)
 
 /*==========================================================================
  *  General utility functions
- *  Martinus H. V. Werts, 2024
+ *  M. H. V. Werts, 2024
  *==========================================================================*/
  
  

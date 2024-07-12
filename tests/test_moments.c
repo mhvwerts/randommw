@@ -6,9 +6,16 @@
 
 /* test_moments.c 
  *
- * Returns the raw moments of a pseudorandom number generator.
+ * Returns the raw moments of a Gaussian pseudorandom number generator.
  *
- * based on code by C. D. Macfarland:
+ *
+ * This program takes 1 or 2 optional arguments: 
+ * - the random seed
+ * - the underlying uniform random number generator
+ *
+ *
+ * Analysis of the raw moments of the generated numbers proceeds
+ * following C. D. Macfarland:
  * - https://github.com/cd-mcfarland/fast_prng
  * - C. D. McFarland, "A modified ziggurat algorithm for generating
  *   exponentially and normally distributed pseudorandom numbers", 
@@ -23,8 +30,8 @@
  *
  * */
 
-// test parameters (could be moved to command line params, in part)
-// does not yet include the random seed
+
+// test parameters (could be moved to command line params)
 
 #define PREPRINT		20
 #define TRIALS 			1000000000 // pow(10, 12)
@@ -47,20 +54,40 @@ int double_factorial(int n) {
 }
 
 
-int main(void)
+// main program
+
+int main(int argc, char *argv[])
 {
 	unsigned long int i, j;
 
 	double ran;
 	double val, X[NUM_RAW_MOMENTS], x_j;
 
-	int expected;
+	int SeedZig;
 
-	// Initialize the PRNG (seed) and Ziggurat algorithm
-	// RanSetRan("Xoshiro256+"); printf("Xoshiro256+ activated.\n");
-	// RanSetRan("Splitmix64"); printf("Splitmix64 activated.\n");
-	RanSetRan("MELG19937"); printf("MELG19937 activated.\n");
-	RanInit(0);
+	int expected;
+	
+	switch(argc)
+	{
+		case 1:
+			SeedZig = 0;
+			break;
+		case 2:
+			SeedZig = atoi(argv[1]);
+			break;
+		case 3:
+			SeedZig = atoi(argv[1]);
+			printf("%s pseudo-random number generator selected.\n", argv[2]);
+			RanSetRan(argv[2]);
+			break;
+		default:
+			printf("ERROR. Unexpected number of arguments\n");
+			return(1);
+	}
+	
+	// Initialize randommw PRNG system
+	printf("seed = %d\n", SeedZig);
+	RanInit((uint64_t)SeedZig);
 
 	// Print the first numbers generated, for visual inspection
 	for (i = 0; i < PREPRINT; i++)

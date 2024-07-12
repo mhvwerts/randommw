@@ -1,4 +1,5 @@
-Xoshiro256+ activated.
+Xoshiro256+ pseudo-random number generator selected.
+seed = 0
   0.835603
   1.024366
  -0.862651

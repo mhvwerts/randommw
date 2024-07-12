@@ -1,4 +1,5 @@
-MELG19937 activated.
+MELG19937 pseudo-random number generator selected.
+seed = 0
   0.785281
  -0.286439
   0.564399

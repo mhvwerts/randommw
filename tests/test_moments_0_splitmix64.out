@@ -1,4 +1,5 @@
-Splitmix64 activated.
+Splitmix64 pseudo-random number generator selected.
+seed = 0
   0.714197
  -1.785313
  -1.991893
