@@ -42,13 +42,13 @@ uint32_t IRan_MELG19937(void);
 double DRan_MELG19937(void);
 void RanJump_MELG19937(uint64_t uJumps); 
 
-/* xoshiro256+ Blackman & Vigna */
+/* Xoshiro256+ Blackman & Vigna */
 void RanSetSeed_xoshiro256p(uint64_t uSeed);
 uint32_t IRan_xoshiro256p(void);
 double DRan_xoshiro256p(void);
 void RanJump_xoshiro256p(uint64_t uJumps); 
 
-/* splitmix64 */
+/* Splitmix64 */
 void RanSetSeed_splitmix64(uint64_t uSeed);
 uint32_t IRan_splitmix64(void);
 double DRan_splitmix64(void);
@@ -65,11 +65,12 @@ typedef void   		( * RANSETSEEDFUN)(uint64_t);
 typedef void   		( * RANJUMPFUN)(uint64_t);
 
 void    RanSetRan(const char *sRan);
-void    RanSetRanExt(DRANFUN DRanFun, IRANFUN IRanFun, RANSETSEEDFUN RanSetSeedFun);
-double  DRanU(void);
-uint32_t  IRanU(void);
+void    RanSetRanExt(DRANFUN DRanFun, IRANFUN IRanFun, 
+		             RANSETSEEDFUN RanSetSeedFun, RANJUMPFUN RanJumpFun);
 void    RanSetSeed(uint64_t uSeed);
 void    RanJumpRan(uint64_t uJumpsize);
+double  DRanU(void);
+uint32_t  IRanU(void);
 
 /* from zignor.h */
 double  DRanNormalZig(void);

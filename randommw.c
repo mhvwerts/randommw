@@ -970,25 +970,19 @@ void    RanSetRan(const char *sRan)
 		s_fnDRanu = NULL;
 		s_fnIRanu = NULL;
 		s_fnRanSetSeed = NULL;
+		s_fnRanJump = NULL;
 	}
 	/* END if ... else if ... else block */
 }
 
-static uint32_t IRanUfromDRanU(void)
-{
-    return (uint32_t)(UINT_MAX * (*s_fnDRanu)());
-}
 
-static double DRanUfromIRanU(void)
+void    RanSetRanExt(DRANFUN DRanFun, IRANFUN IRanFun,
+		             RANSETSEEDFUN RanSetSeedFun, RANJUMPFUN RanJumpFun)
 {
-    return RANDBL_32new( (*s_fnIRanu)() );
-}
-
-void    RanSetRanExt(DRANFUN DRanFun, IRANFUN IRanFun, RANSETSEEDFUN RanSetSeedFun)
-{
-	s_fnDRanu = DRanFun ? DRanFun : DRanUfromIRanU;
-	s_fnIRanu = IRanFun ? IRanFun : IRanUfromDRanU;
+	s_fnDRanu = DRanFun;
+	s_fnIRanu = IRanFun;
 	s_fnRanSetSeed = RanSetSeedFun;
+	s_fnRanJump = RanJumpFun;
 }
 /*---------------- END uniform random number generators --------------------*/
 
