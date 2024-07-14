@@ -14,7 +14,6 @@
 #include <stdint.h>
 
 
-
 /*--------------------------------------
  * from zigrandom.h, with modifications 
  *--------------------------------------*/
@@ -63,6 +62,7 @@ typedef double 		( * DRANFUN)(void);
 typedef uint32_t 	( * IRANFUN)(void);
 typedef void   		( * RANSETSEEDFUN)(uint64_t);
 typedef void   		( * RANJUMPFUN)(uint64_t);
+
 
 void    RanSetRan(const char *sRan);
 void    RanSetRanExt(DRANFUN DRanFun, IRANFUN IRanFun, 
