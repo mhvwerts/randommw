@@ -34,6 +34,8 @@
 
 #include "randommw.h"
 
+
+
 /*==========================================================================
  * MELG19937-64 pseudo-random number generator
  *
@@ -738,9 +740,8 @@ double DRan_splitmix64(void)
 	return (xx * 0x1.0p-53);
 }
 
-
-
 /*==========================================================================*/
+
 
 
 /*==========================================================================
@@ -749,7 +750,7 @@ double DRan_splitmix64(void)
  *  modifications by M. H. V. Werts, 2024
  *
  *  - Fixed a gcc warning
-  *  - Implemented full 52-bit mantissa precision generator of random doubles
+ *  - Implemented full 52-bit mantissa precision generator of random doubles
  *    in (0, 1) from pairs of 32-bit unsignedintegers coming from MWC256
  *    (Doornik callled this generator "MWC_52")
  *  - Renamed MWC8222 to MWC256
@@ -991,113 +992,6 @@ void    RanSetRanExt(DRANFUN DRanFun, IRANFUN IRanFun, RANSETSEEDFUN RanSetSeedF
 }
 /*---------------- END uniform random number generators --------------------*/
 
-
-/*----------------------------- Polar normal RNG ---------------------------*/
-#define POLARBLOCK(u1, u2, d)	              \
-	do                                        \
-	{   u1 = (*s_fnDRanu)();  u1 = 2 * u1 - 1;\
-		u2 = (*s_fnDRanu)();  u2 = 2 * u2 - 1;\
-		d = u1 * u1 + u2 * u2;                \
-	} while (d >= 1);                         \
-	d = sqrt( (-2.0 / d) * log(d) );       	  \
-	u1 *= d;  u2 *= d
-
-static double s_dNormalInStore;
-
-double  DRanNormalPolar(void)                         /* Polar Marsaglia */
-{
-    double d, u1;
-
-    if (s_cNormalInStore)
-        u1 = s_dNormalInStore, s_cNormalInStore = 0;
-    else
-    {
-        POLARBLOCK(u1, s_dNormalInStore, d);
-        s_cNormalInStore = 1;
-    }
-
-return u1;
-}
-
-#define FPOLARBLOCK(u1, u2, d)	              \
-	do                                        \
-	{   u1 = (float)((*s_fnDRanu)());  u1 = 2 * u1 - 1;\
-		u2 = (float)((*s_fnDRanu)());  u2 = 2 * u2 - 1;\
-		d = u1 * u1 + u2 * u2;                \
-	} while (d >= 1);                         \
-	d = sqrt( (-2.0 / d) * log(d) );       	  \
-	u1 *= d;  u2 *= d
-
-static float s_fNormalInStore;
-
-double  FRanNormalPolar(void)                         /* Polar Marsaglia */
-{
-    float d, u1;
-
-    if (s_cNormalInStore)
-        u1 = s_fNormalInStore, s_cNormalInStore = 0;
-    else
-    {
-        POLARBLOCK(u1, s_fNormalInStore, d);
-        s_cNormalInStore = 1;
-    }
-
-return (double)u1;
-}
-/*--------------------------- END Polar normal RNG -------------------------*/
-
-/*------------------------------ DRanQuanNormal -----------------------------*/
-static double dProbN(double x, int fUpper)
-{
-    double p;  double y;  // int fnegative = 0; // mw231228 remove gcc warning
-
-    if (x < 0)
-        x = -x, fUpper = !fUpper; // fnegative = 1,  // mw231228 remove gcc warning
-    else if (x == 0)
-        return 0.5;
-
-    if ( !(x <= 8 || (fUpper && x <= 37) ) )
-        return (fUpper) ? 0 : 1;
-
-    y = x * x / 2;
-
-    if (x <= 1.28)
-    {
-        p = 0.5 - x * (0.398942280444 - 0.399903438504 * y /
-            (y + 5.75885480458 - 29.8213557808 /
-            (y + 2.62433121679 + 48.6959930692 /
-            (y + 5.92885724438))));
-    }
-    else
-    {
-        p = 0.398942280385 * exp(-y) /
-            (x - 3.8052e-8 + 1.00000615302 /
-            (x + 3.98064794e-4 + 1.98615381364 /
-            (x - 0.151679116635 + 5.29330324926 /
-            (x + 4.8385912808 - 15.1508972451 /
-            (x + 0.742380924027 + 30.789933034 /
-            (x + 3.99019417011))))));
-    }
-    return (fUpper) ? p : 1 - p;
-}
-
-double  DProbNormal(double x)
-{
-    return dProbN(x, 0);
-}
-
-double  DRanQuanNormal(void)
-{
-	return DProbNormal(DRanNormalPolar());
-}
-
-double  FRanQuanNormal(void)
-{
-	return DProbNormal(FRanNormalPolar());
-}
-/*----------------------------- END DRanQuanNormal -------------------------*/
-
-
 /*==========================================================================*/
 
 
@@ -1184,14 +1078,6 @@ double  DRanNormalZig(void)
 	}
 }
 /*--------------------------- END General Ziggurat -------------------------*/
-
-/*--------------------------- functions for testing ------------------------*/
-double  DRanQuanNormalZig(void)
-{
-	return DProbNormal(DRanNormalZig());
-}
-
-/*------------------------- END functions for testing ----------------------*/
 
 
 /*==========================================================================*/

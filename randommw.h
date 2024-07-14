@@ -14,10 +14,10 @@
 #include <stdint.h>
 
 
+
 /*--------------------------------------
  * from zigrandom.h, with modifications 
  *--------------------------------------*/
- 
 #define M_RAN_INVM30	9.31322574615478515625e-010			  /* 1.0 / 2^30 */
 #define M_RAN_INVM32	2.32830643653869628906e-010			  /* 1.0 / 2^32 */
 #define M_RAN_INVM48	3.55271367880050092936e-015			  /* 1.0 / 2^48 */
@@ -26,12 +26,15 @@
 
 #define RANDBL_32new(iRan1)                   \
     ((int)(iRan1) * M_RAN_INVM32 + (0.5 + M_RAN_INVM32 / 2))
+	
 #define RANDBL_48new(iRan1, iRan2)            \
     ((int)(iRan1) * M_RAN_INVM32 + (0.5 + M_RAN_INVM48 / 2) + \
         (int)((iRan2) & 0x0000FFFF) * M_RAN_INVM48)
+		
 #define RANDBL_52new(iRan1, iRan2)            \
     ((int)(iRan1) * M_RAN_INVM32 + (0.5 + M_RAN_INVM52 / 2) + \
         (int)((iRan2) & 0x000FFFFF) * M_RAN_INVM52)
+
 
 /* MELG19937-64 Harase & Kimoto */
 void RanSetSeed_MELG19937(uint64_t uSeed);
@@ -68,18 +71,8 @@ uint32_t  IRanU(void);
 void    RanSetSeed(uint64_t uSeed);
 void    RanJumpRan(uint64_t uJumpsize);
 
-/* normal probabilities */
-double  DProbNormal(double x);
-
-/* polar standard normal RNG */
-double  DRanNormalPolar(void);
-double  FRanQuanNormal(void);
-double  DRanQuanNormal(void);
-
-
 /* from zignor.h */
 double  DRanNormalZig(void);
-double  DRanQuanNormalZig(void);
 
 /* further extensions */
 void  RanInit(uint64_t uSeed);
