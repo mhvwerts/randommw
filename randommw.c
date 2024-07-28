@@ -918,6 +918,10 @@ void RanSetSeed_MWC256(uint64_t uSeed)
 {
 	unsigned int i;
 	
+	// Do not forget to (re-)initialize all state variables.
+	s_uiStateMWC = MWC_R - 1;
+	s_uiCarryMWC = MWC_C;
+
 	// Use SplitMix64 to generate the initial state for MWC256
 	RanSetSeed_splitmix64(uSeed);
 	for (i = 0; i < MWC_R; ++i)
@@ -958,7 +962,6 @@ double DRan_MWC256(void)
 
 
 /*------------------- uniform random number generators ----------------------*/
-static int s_cNormalInStore = 0;		     /* > 0 if a normal is in store */
 
 /* Set default to MWC256 uniform generator 
    (doubles with 52 bits mantissa randomness) */
@@ -979,7 +982,6 @@ uint32_t IRanU(void)
 
 void    RanSetSeed(uint64_t uSeed)
 {
-   	s_cNormalInStore = 0;
 	(*s_fnRanSetSeed)(uSeed);
 }
 
@@ -994,8 +996,6 @@ void    RanJumpRan(uint64_t uJumpsize)
 
 void    RanSetRan(const char *sRan)
 {
-   	s_cNormalInStore = 0;
-	
 	/* BEGIN if ... else if ... else block */
 	if (strcmp(sRan, "MWC256") == 0)
 	{
