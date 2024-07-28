@@ -799,6 +799,79 @@ double DRan_splitmix64(void)
 
 
 /*==========================================================================
+ *  Lehmer generator provided by D. Lemire, 2019
+ *
+ *  It generates 64-bit unsigned integers using a 128-bit state, and
+ *  has been reported to pass BigCrush
+ *
+ *  https://lemire.me/blog/2019/03/19/the-fastest-conventional-random-number-generator-that-can-pass-big-crush/
+ 
+ *  https://github.com/lemire/testingRNG/blob/master/source/lehmer64.h
+ *  
+ *
+ *  Adapted by M. H. V. Werts, 2024
+  ==========================================================================*/
+
+
+static __uint128_t g_lehmer64_state;
+
+/**
+* D. H. Lehmer, Mathematical methods in large-scale computing units.
+* Proceedings of a Second Symposium on Large Scale Digital Calculating
+* Machinery;
+* Annals of the Computation Laboratory, Harvard Univ. 26 (1951), pp. 141-146.
+*
+* P L'Ecuyer,  Tables of linear congruential generators of different sizes and
+* good lattice structure. Mathematics of Computation of the American
+* Mathematical
+* Society 68.225 (1999): 249-260.
+*/
+
+static inline void lehmer64_seed(uint64_t uSeed)
+{
+	RanSetSeed_splitmix64(uSeed); // seed Splitmix64
+	// initialize the 128-bit state using 2x Splitmix64
+	g_lehmer64_state = (((__uint128_t)splitmix64_next()) << 64) +
+                          splitmix64_next();
+}
+
+static inline uint64_t lehmer64()
+{
+	g_lehmer64_state *= UINT64_C(0xda942042e4dd58b5);
+	return g_lehmer64_state >> 64;
+}
+
+
+/*----------------------------------------------------------------
+ * Interface between lehmer64 and zigrandom
+ *  based on the xoshiro256+ interface
+ *----------------------------------------------------------------*/
+
+void RanSetSeed_lehmer64(uint64_t uSeed)
+{
+	lehmer64_seed(uSeed);
+}
+
+uint32_t IRan_lehmer64(void)
+{
+	return (uint32_t)(lehmer64() >> 32);
+}
+
+double DRan_lehmer64(void)
+{
+	uint64_t xx;
+	
+	while ((xx = (lehmer64() >> 11)) == 0)
+		;
+	
+	return (xx * 0x1.0p-53);
+}
+
+/*==========================================================================*/
+
+
+
+/*==========================================================================
  *  Modified version of zigrandom.c
  *  original code by J. A. Doornik, 2005
  *  modifications by M. H. V. Werts, 2024
@@ -996,6 +1069,13 @@ void    RanSetRan(const char *sRan)
 		s_fnDRanu = DRan_MWC256;
 		s_fnIRanu = IRan_MWC256;
 		s_fnRanSetSeed = RanSetSeed_MWC256;
+		s_fnRanJump = NULL;
+	}
+	else if (strcmp(sRan, "Lehmer64") == 0)
+	{
+		s_fnDRanu = DRan_lehmer64;
+		s_fnIRanu = IRan_lehmer64;
+		s_fnRanSetSeed = RanSetSeed_lehmer64;
 		s_fnRanJump = NULL;
 	}
 	else if (strcmp(sRan, "Xoshiro256+") == 0)
