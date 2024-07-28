@@ -882,6 +882,8 @@ double DRan_lehmer64(void)
  *    (Doornik callled this generator "MWC_52")
  *  - Renamed MWC8222 to MWC256
  *  - Use stdint.h for exact integer widths
+ *  - Fully initialize the generator (256 uint32s) from a single 64-bit
+ *    seed, using SplitMix64
  *
  *==========================================================================
  *  This code is Copyright (C) 2005, Jurgen A. Doornik.
@@ -907,72 +909,21 @@ static uint32_t s_uiCarryMWC = MWC_C;
 static uint32_t s_auiStateMWC[MWC_R];
 
 
-void GetInitialSeeds_MWC256(uint32_t auiSeed[], int32_t cSeed,
-	uint32_t uiSeed, uint32_t uiMin)
-{
-	int i;
-	uint32_t s = uiSeed;									/* may be 0 */
-
-	for (i = 0; i < cSeed; )
-	{	/* see Knuth p.106, Table 1(16) and Numerical Recipes p.284 (ranqd1)*/
-		s = 1664525 * s + 1013904223;
-		if (s <= uiMin)
-			continue;
-        auiSeed[i] = s;
-		++i;
-    }
-}
-
-/*
-The MWC256 generator is initialized and seeded using 
-	RanSetSeed_MWC256_original(int *piSeed, int cSeed)
-
-If cSeed == MWC_R (currently set at 256), piSeed
-is expected to point to a 256 (MWC_R)-element int array that initializes
-the MWC256 state.
-
-Other values for cSeed will go to GetInitialSeeds
-with 256 (MWC_R) and piSeed[0] as parameters
-or just 256 and 0 if piSeed is not intialized or cSeed is 0
-
-Hence, there are three cases here:
-- cSeed == MWC_R: initialize MWC256 from *piSeed
-- cSeed == 0: initialize MWC256 using 0 as seed
-- cSeed == 1: initialize MWC256 using piSeed[0] as seed
-
-Therefore, if a single seed value is used:
-cSeed == 1 and pass a pointer to the seed value
-
-The seed value is a signed int (32 bits) which is somewhere
-converted implicitly to an unsigned 32 bit int, through
-pointer exchange, conserving all bits
-*/ 	
-void RanSetSeed_MWC256_original(int *piSeed, int cSeed)
-{
-	s_uiStateMWC = MWC_R - 1;
-	s_uiCarryMWC = MWC_C;
-	
-	if (cSeed == MWC_R)
-	{
-		int i;
-		for (i = 0; i < MWC_R; ++i)
-		{
-			s_auiStateMWC[i] = (uint32_t)piSeed[i];
-		}
-	}
-	else
-	{
-		GetInitialSeeds_MWC256(s_auiStateMWC, MWC_R, piSeed && cSeed ? piSeed[0] : 0, 0);
-	}
-}
-
-// New-style RanSetSeed interface (single unsigned 64-bit integer seed)
-// interfaced to original RanSetSeed for MWC256
+/* New-style RanSetSeed interface (single unsigned 64-bit integer seed)
+ 
+   MWC256 needs to be initialized with 256 unsigned 32-bit integers.
+   These are obtained from SplitMix64.
+*/
 void RanSetSeed_MWC256(uint64_t uSeed)
 {
-	int iSeed;
-	iSeed = (int)uSeed;
-	RanSetSeed_MWC256_original(&iSeed, 1);
+	unsigned int i;
+	
+	// Use SplitMix64 to generate the initial state for MWC256
+	RanSetSeed_splitmix64(uSeed);
+	for (i = 0; i < MWC_R; ++i)
+	{
+		s_auiStateMWC[i] = IRan_splitmix64(); // get uint32 from splitmix64
+	}
 }
 
 uint32_t IRan_MWC256(void)
@@ -985,24 +936,6 @@ uint32_t IRan_MWC256(void)
 	s_auiStateMWC[s_uiStateMWC] = (uint32_t)t;
     return (uint32_t)t;
 }
-
-/*
-// From the original 'zigrandom.c' by Doornik: 
-// Obsolete 32-bit mantissa precision double random generator, which, 
-// on 64-bit hardware, is only marginally faster than
-// the newer 52-bit mantissa version below.
-
-double DRan_MWC8222(void)
-{
-	uint64_t t;
-
-	s_uiStateMWC = (s_uiStateMWC + 1) & (MWC_R - 1);
-	t = MWC_A * s_auiStateMWC[s_uiStateMWC] + s_uiCarryMWC;
-	s_uiCarryMWC = (uint32_t)(t >> 32);
-	s_auiStateMWC[s_uiStateMWC] = (uint32_t)t;
-	return RANDBL_32new(t);
-}
-*/
 
 double DRan_MWC256(void)
 /* Generate random doubles with full-precision 52-bit mantissa using MWC256 */
