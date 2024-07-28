@@ -69,8 +69,8 @@ int main(int argc, char *argv[])
 
 	// RanInit("Xoshiro256+", (uint64_t) zigseed, 0); printf("Xoshiro256+ activated.\n");
 	// RanInit("Splitmix64"), (uint64_t) zigseed, 0); printf("Splitmix64 activated.\n");
-	// RanInit("MELG19937", (uint64_t) zigseed, 0); printf("MELG19937 activated.\n");
-	RanInit("Lehmer64", (uint64_t) zigseed, 0); printf("Lehmer64 activated.\n");
+	RanInit("MELG19937", (uint64_t) zigseed, 0); printf("MELG19937 activated.\n");
+	// RanInit("Lehmer64", (uint64_t) zigseed, 0); printf("Lehmer64 activated.\n");
 	
 	
 	// Print the first numbers generated, for visual inspection
