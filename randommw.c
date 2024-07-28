@@ -82,11 +82,15 @@ static void RanSetSeed_splitmix64(uint64_t uSeed);
 static uint32_t IRan_splitmix64(void);
 static double DRan_splitmix64(void);
 
+/* Lehmer64 */
+static void RanSetSeed_lehmer64(uint64_t uSeed);
+static uint32_t IRan_lehmer64(void);
+static double DRan_lehmer64(void);
+
 /* MWC256 (aka MWC8222) George Marsaglia */
 static void RanSetSeed_MWC256(uint64_t uSeed);
 static uint32_t IRan_MWC256(void);
 static double DRan_MWC256(void);
-
 
 
 
