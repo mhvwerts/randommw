@@ -9,7 +9,7 @@ int main(void) {
 	uint64_t zigseed = 10;
 	double rval;
 		
-	RanInit(zigseed);
+	RanInit("", zigseed, 0);
 	
 	for(i = 0; i < 20; i++)	{
 		rval = DRanNormalZig();

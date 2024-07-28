@@ -45,26 +45,37 @@ int main(void)
 
 	TimerHeader();
 
-	Timer("Warming up",		DRan_MWC256, 			RanSetSeed_MWC256, cm/10); 
-	Timer("MWC256",			DRan_MWC256, 			RanSetSeed_MWC256, cm);
-	Timer("Xoshiro256+",	DRan_xoshiro256p,		RanSetSeed_xoshiro256p, cm);
-	Timer("Splitmix64",     DRan_splitmix64,		RanSetSeed_splitmix64, cm);
-	Timer("MELG19937",     	DRan_MELG19937,			RanSetSeed_MELG19937, cm);
+	RanInit("MWC256", 0, 0);
+	Timer("Warming up",		DRanU, 		RanSetSeed, cm/10); 
+	
+	RanInit("MWC256", 0, 0);
+	Timer("MWC256",			DRanU, 		RanSetSeed, cm);
+	
+	RanInit("Xoshiro256+", 0, 0);
+	Timer("Xoshiro256+",	DRanU,		RanSetSeed, cm);
+	
+	RanInit("Splitmix64", 0, 0);
+	Timer("Splitmix64",     DRanU,		RanSetSeed, cm);
+		
+	RanInit("MELG19937", 0, 0);
+	Timer("MELG19937",     	DRanU,		RanSetSeed, cm);
 
-	RanSetRan("MWC256");
-	Timer("ZIGNOR MWC256",			DRanNormalZig, 			RanInit, cm);
+
+
+	RanInit("MWC256", 0, 0);
+	Timer("ZIGNOR MWC256",			DRanNormalZig, 			RanSetSeed, cm);
 	
-	RanSetRan("Xoshiro256+");
-	Timer("ZIGNOR Xoshiro256+",		DRanNormalZig, 			RanInit, cm);
+	RanInit("Xoshiro256+", 0, 0);
+	Timer("ZIGNOR Xoshiro256+",		DRanNormalZig, 			RanSetSeed, cm);
 	
-	RanSetRan("Splitmix64");
-	Timer("ZIGNOR Splitmix64",		DRanNormalZig, 			RanInit, cm);
+	RanInit("Splitmix64", 0, 0);
+	Timer("ZIGNOR Splitmix64",		DRanNormalZig, 			RanSetSeed, cm);
 	
-	RanSetRan("MELG19937");
-	Timer("ZIGNOR MELG19937",		DRanNormalZig, 			RanInit, cm);
+	RanInit("MELG19937", 0, 0);
+	Timer("ZIGNOR MELG19937",		DRanNormalZig, 			RanSetSeed, cm);
 	
-	RanSetRan("MWC256");
-	Timer("ZIGNOR MWC256 (again)",	DRanNormalZig, 			RanInit, cm);
+	RanInit("MWC256", 0, 0);
+	Timer("ZIGNOR MWC256 (again)",	DRanNormalZig, 			RanSetSeed, cm);
 
 	
 	/* Code snippet to see if the program indeed crashes gracefully if

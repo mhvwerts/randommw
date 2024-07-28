@@ -41,13 +41,14 @@ int main(int argc, char **argv)
 		case 3:
 			zigseed = (uint64_t)atoi(argv[1]);
 			Njumps = (uint64_t)atoll(argv[2]);
-			RanSetRan("Xoshiro256+"); printf("Xoshiro256+ activated.\n");
+			RanInit("Xoshiro256+", zigseed, 0); // zero initial jumps
+			printf("Xoshiro256+ activated.\n");
 			break;
 		case 4:
 			zigseed = (uint64_t)atoi(argv[1]);
-			Njumps = (uint64_t)atoll(argv[2]);
+			Njumps = (uint64_t)atoll(argv[2]); // zero initial jumps
 			printf("%s pseudo-random number generator selected.\n", argv[3]);
-			RanSetRan(argv[3]);
+			RanInit(argv[3], zigseed, 0);
 			break;
 		default:
 			printf("ERROR. Unexpected number of arguments.\n");
@@ -55,8 +56,6 @@ int main(int argc, char **argv)
 			return(1);
 	}
 
-	RanInit(zigseed);
-	
 	printf("\n");
 	for(i = 0; i < 20; i++)	{
 		rval = DRanNormalZig();

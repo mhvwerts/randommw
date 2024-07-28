@@ -1,3 +1,4 @@
+
 # randommw: Generator of pseudo-random numbers with uniform or Gaussian distribution (in C)
 
 
@@ -32,7 +33,7 @@ int main(void) {
 	uint64_t zigseed = 10;
 	double rval;
 		
-	RanInit(zigseed);
+	RanInit("", zigseed, 0);
 	
 	for(i = 0; i < 20; i++)	{
 		rval = DRanNormalZig();
@@ -44,23 +45,15 @@ int main(void) {
 
 ```
 
-### `void RanInit(uint64_t uSeed)`
+### `void RanInit(const char *sRan, uint64_t uSeed, uint64_t uJumpsize)`
 
-Initialize the ziggurat algorithm and set the random seed for the underlying random number generator. The default generator is MWC256 (with 52-bit random mantissa for floating point doubles). If a different generator is desired, call `RanSetRan()` before `RanInit()`.
+Initialize the ziggurat algorithm, set the PRNG and its random seed, and optionally "fast-forward" the generator. The random seed should always be supplied by the user, in order to have reproducible random number streams. If a different stream is needed, provide a different seed.
 
-The random seed `uSeed` is always an unsigned 64-bit integer, independently of the specific random number generator. A PRNG-specific routine uses this seed to fully initialize the PRNG.
+If `sRan` is an empty string, the default generator will be used: MWC256. At present, the possible choices for `sRan` are `"MWC256"`, `"Xoshiro256+"`,`"MELG19937"` and `"Splitmix64"`. The string is case-sensitive, and should correspond exactly to one of these options; else, your program will crash. 
 
-For seeding the PRNGs randomly, we can use the conventional method using the system time (not entirely recommended in a multiprocessing environment, but good enough for now). This may be done in the following way.
+The random seed `uSeed` is always an unsigned 64-bit integer, independently of the specific random number generator. A PRNG-specific routine uses this seed to fully initialize the PRNG. 
 
-```c
-#include <time.h>
-#include "randommw.h"
-
-(...)
-    // set seed based on time only (good enough for now)
-    RanInit((uint64_t)time(NULL));
-(...)
-```
+For `uJumpsize > 0`, the initialization routine will attempt to "fast-forward" the generator.  In the case of `"Xoshiro256+"` and`"MELG19937"`, long "jumps" of the generator are performed. Each of the `uJumpsize` jumps fast-forwards the PRNG by 2^192 (Xoshiro256+) or 2^256 (MELG19937) steps, giving access to an independent stream of random numbers. This mechanism, often called "splitting", is of importance for reliable parallelization of computer simulations.[2] Don't jump using a generator that does not support it: your program will brutally crash with a segmentation fault! The Splitmix64 implementation by Vigna used presently in our code does not support jumping/splitting (in spite of its name).
 
 
 ### `double DRanNormalZig(void)`
@@ -75,20 +68,7 @@ Obtain a double-precision floating point random number from a uniform distributi
 
 ### `uint32_t IranU(void)`
 
-Obtain an unsigned 32-bit integer random number from the active PRNG.
-
-
-### `void RanSetRan(const char *sRan)`
-
-Choose the uniform pseudo-random number generator that feeds the ziggurat algorithm. At present, the possible choices are `"MWC256"`, `"Xoshiro256+"`,`"MELG19937"` and `"Splitmix64"`. The string is case-sensitive, and should correspond exactly to one of these options; else, your program will crash. 
-
-After calling `RanSetRan()`, you should call `RanInit()` (again). Or, put differently, `RanSetRan()` should be called before `RanInit()`.
-
-### `void RanJumpRan(uint64_t uJumpsize)`
-
-If you use `"Xoshiro256+"` or `"MELG19937"`, you can perform long "jumps" of the generator using `RanJumpRan(uint64_t uJumps)`. Each of the `uJumps` jumps fast-forwards the PRNG by 2^192 (Xoshiro256+) or 2^256 (MELG19937) steps, giving access to an independent stream of random numbers. This mechanism, often called "splitting", is of importance for reliable parallelization of computer simulations.[2] 
-
-Don't jump using a generator that does not support it: your program will brutally crash with a segmentation fault! The Splitmix64 implementation by Vigna used presently in our code does not support jumping/splitting (in spite of its name).
+Obtain an unsigned 32-bit integer random number from the active PRNG. Only 32-bit unsigned values are supplied, for historic reasons: the ZIGNOR algorithm relies on 32-bit unsigned integers. Interfaces supplying other types of random numbers may be developed.
 
 
 ## Compilation, development and testing
@@ -98,7 +78,7 @@ At present, the development uses `gcc` exclusively, both on Windows via [mingw-w
 
 ## Status 
 
-We are working towards basic usage and validation of the PRNG for normally distributed numbers in numerical simulations of colloidal systems. The code is functional and is now contained in a monolithic module (`randommw.c`) that can be easily included in a scientific computing project in C. The random numbers have a good Gaussian distribution (tested up to 8 raw moments, see `tests/test_moments.c`). They are generated with high throughput, using MWC256, Xoshiro256+, MELG19937-64 or Splitmix64 as underlying uniform PRNG.
+We have validated the PRNGs and are using them for normally distributed random numbers in numerical simulations of colloidal systems, The code is functional and is now contained in a monolithic module (`randommw.c`) that can be easily included in a scientific computing project in C. The random numbers have a good Gaussian distribution (tested up to 8 raw moments, see `tests/test_moments.c`). They are generated with high throughput, using MWC256, Xoshiro256+, MELG19937-64 or Splitmix64 as underlying uniform PRNG.
 
 Generated normally distributed pseudo-random numbers can be written to a binary file using `genzignor.c`. These numbers have been used successfully for Brownian simulations in [DDM Toolkit](https://github.com/mhvwerts/ddm-toolkit), giving consistent results between the simulation and subsequent DDM analysis of the simulated image stack.
 

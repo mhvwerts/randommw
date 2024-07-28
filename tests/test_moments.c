@@ -71,23 +71,24 @@ int main(int argc, char *argv[])
 	{
 		case 1:
 			SeedZig = 0;
+			RanInit("", SeedZig, 0);
 			break;
 		case 2:
 			SeedZig = atoi(argv[1]);
+			RanInit("", (uint64_t)SeedZig, 0);
 			break;
 		case 3:
 			SeedZig = atoi(argv[1]);
 			printf("%s pseudo-random number generator selected.\n", argv[2]);
-			RanSetRan(argv[2]);
+			RanInit(argv[2], (uint64_t)SeedZig, 0);
 			break;
 		default:
 			printf("ERROR. Unexpected number of arguments\n");
 			return(1);
 	}
 	
-	// Initialize randommw PRNG system
 	printf("seed = %d\n", SeedZig);
-	RanInit((uint64_t)SeedZig);
+
 
 	// Print the first numbers generated, for visual inspection
 	for (i = 0; i < PREPRINT; i++)

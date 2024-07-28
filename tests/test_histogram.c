@@ -67,11 +67,10 @@ int main(int argc, char *argv[])
 			return(1);
 	}
 
-	// RanSetRan("Xoshiro256+"); printf("Xoshiro256+ activated.\n");
-	// RanSetRan("Splitmix64"); printf("Splitmix64 activated.\n");
-	RanSetRan("MELG19937"); printf("MELG19937 activated.\n");
+	// RanInit("Xoshiro256+", (uint64_t) zigseed, 0); printf("Xoshiro256+ activated.\n");
+	// RanInit("Splitmix64"), (uint64_t) zigseed, 0); printf("Splitmix64 activated.\n");
+	RanInit("MELG19937", (uint64_t) zigseed, 0); printf("MELG19937 activated.\n");
 	
-	RanInit((uint64_t) zigseed);
 	
 	// Print the first numbers generated, for visual inspection
 	for (i = 0; i < PREPRINT; i++)
