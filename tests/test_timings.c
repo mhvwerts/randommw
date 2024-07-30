@@ -56,9 +56,6 @@ int main(void)
 	
 	RanInit("Xoshiro256+", 0, 0);
 	Timer("Xoshiro256+",	DRanU,		RanSetSeed, cm);
-	
-	RanInit("Splitmix64", 0, 0);
-	Timer("Splitmix64",     DRanU,		RanSetSeed, cm);
 		
 	RanInit("MELG19937", 0, 0);
 	Timer("MELG19937",     	DRanU,		RanSetSeed, cm);
@@ -73,10 +70,7 @@ int main(void)
 	
 	RanInit("Xoshiro256+", 0, 0);
 	Timer("ZIGNOR Xoshiro256+",		DRanNormalZig, 			RanSetSeed, cm);
-	
-	RanInit("Splitmix64", 0, 0);
-	Timer("ZIGNOR Splitmix64",		DRanNormalZig, 			RanSetSeed, cm);
-	
+
 	RanInit("MELG19937", 0, 0);
 	Timer("ZIGNOR MELG19937",		DRanNormalZig, 			RanSetSeed, cm);
 	

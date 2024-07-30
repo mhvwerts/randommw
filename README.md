@@ -1,4 +1,3 @@
-
 # randommw: Generator of pseudo-random numbers with uniform or Gaussian distribution (in C)
 
 
@@ -8,7 +7,7 @@ Numerical simulations for scientific and technological applications regularly re
 
 This small C library provides all the basic functionality for such scientific random number generation. It is monolithic: only `randommw.c` and `randommw.h` need to be included in the project, and it does not need any other non-standard library. It is an integrated and curated collection of tried & tested code described in the literature. More background is provided at the end of this README document.
 
-The library includes five different generators of uniformly distributed pseudo-random numbers: MWC256, Lehmer64, Xoshiro256+, MELG19937-64 and Splitmix64. These have been reported to pass the relevant statistical tests.[14][16][17] There is a ziggurat algorithm, ZIGNOR, coded by J. A. Doornik,[9] for obtaining random numbers with a Gaussian distribution. The quality of the generated Gaussian distributions has been checked via their raw moments, following McFarland.[10]
+The library includes four different generators of uniformly distributed pseudo-random numbers: MWC256, Lehmer64, Xoshiro256+ and MELG19937-64. These have been reported to pass the relevant statistical tests.[14][16][17] There is a ziggurat algorithm, ZIGNOR, coded by J. A. Doornik,[9] for obtaining random numbers with a Gaussian distribution. The quality of the generated Gaussian distributions has been checked via their raw moments, following McFarland.[10]
 
 <p align="center">
   <img src="./tests/histogram.png" width="450">
@@ -45,15 +44,20 @@ int main(void) {
 
 ```
 
+### Important warning
+
+Choose, initialize and use only a single PRNG from `randommw.c` in each C program. The library was designed to provide a single pseudo-random number stream from a single PRNG in a single process. Simple (but quite effective) parallelization of simulations is possible by running several instances of the same program in parallel, using the same PRNG with the same seed `uSeed`, but a different `uJumpsize` (see `RanInit()`) for each processes. For comparison purposes, it is possible to switch to a different PRNG in the same program, but each switch completely re-initializes and re-starts the PRNG.
+
+
 ### `void RanInit(const char *sRan, uint64_t uSeed, uint64_t uJumpsize)`
 
 Initialize the ziggurat algorithm, set the PRNG and its random seed, and optionally "fast-forward" the generator. The random seed should always be supplied by the user, in order to have reproducible random number streams. If a different stream is needed, provide a different seed.
 
-If `sRan` is an empty string, the default generator will be used: MWC256. At present, the possible choices for `sRan` are `"MWC256"`, `"Lehmer64"`, `"Xoshiro256+"`,`"MELG19937"` and `"Splitmix64"`. The string is case-sensitive, and should correspond exactly to one of these options; else, your program will crash. 
+If `sRan` is an empty string, the default generator will be used: MWC256. At present, the possible choices for `sRan` are `"MWC256"`, `"Lehmer64"`, `"Xoshiro256+"` and `"MELG19937"`. The string is case-sensitive, and should correspond exactly to one of these options; else, your program will crash. 
 
 The random seed `uSeed` is always an unsigned 64-bit integer, independently of the specific random number generator. A PRNG-specific routine uses this seed to fully initialize the PRNG. 
 
-For `uJumpsize > 0`, the initialization routine will attempt to "fast-forward" the generator.  In the case of `"Xoshiro256+"` and`"MELG19937"`, long "jumps" of the generator are performed. Each of the `uJumpsize` jumps fast-forwards the PRNG by 2^192 (Xoshiro256+) or 2^256 (MELG19937) steps, giving access to an independent stream of random numbers. This mechanism, often called "splitting", is of importance for reliable parallelization of computer simulations.[2] Don't jump using a generator that does not support it: your program will brutally crash with a segmentation fault! The Splitmix64 implementation by Vigna used presently in our code does not support jumping/splitting (in spite of its name).
+For `uJumpsize > 0`, the initialization routine will attempt to "fast-forward" the generator.  This mechanism, often called "splitting", is of importance for reliable parallelization of computer simulations.[2] In the case of `"Xoshiro256+"` and`"MELG19937"`, long "jumps" of the generator are performed. Each of the `uJumpsize` jumps fast-forwards the PRNG by 2^192 (Xoshiro256+) or 2^256 (MELG19937) steps, giving access to an independent stream of random numbers. Don't jump using a generator that does not support it: your program will brutally crash with a segmentation fault!
 
 
 ### `double DRanNormalZig(void)`
@@ -78,7 +82,7 @@ At present, the development uses `gcc` exclusively, both on Windows via [mingw-w
 
 ## Status 
 
-We have validated the PRNGs and are using them for normally distributed random numbers in numerical simulations of colloidal systems, The code is functional and is now contained in a monolithic module (`randommw.c`) that can be easily included in a scientific computing project in C. The random numbers have a good Gaussian distribution (tested up to 8 raw moments, see `tests/test_moments.c`). They are generated with high throughput, using MWC256, Lehmer64, Xoshiro256+, MELG19937-64 or Splitmix64 as underlying uniform PRNG.
+We have validated the PRNGs and are using them for normally distributed random numbers in numerical simulations of colloidal systems, The code is functional and is now contained in a monolithic module (`randommw.c`) that can be easily included in a scientific computing project in C. The random numbers have a good Gaussian distribution (tested up to 8 raw moments, see `tests/test_moments.c`). They are generated with high throughput, using MWC256, Lehmer64, Xoshiro256+ or MELG19937-64 as underlying uniform PRNG.
 
 Generated normally distributed pseudo-random numbers can be written to a binary file using `genzignor.c`. These numbers have been used successfully for Brownian simulations in [DDM Toolkit](https://github.com/mhvwerts/ddm-toolkit), giving consistent results between the simulation and subsequent DDM analysis of the simulated image stack.
 

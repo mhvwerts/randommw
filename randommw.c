@@ -77,11 +77,6 @@ static uint32_t IRan_xoshiro256p(void);
 static double DRan_xoshiro256p(void);
 static void RanJump_xoshiro256p(uint64_t uJumps); 
 
-/* Splitmix64 */
-static void RanSetSeed_splitmix64(uint64_t uSeed);
-static uint32_t IRan_splitmix64(void);
-static double DRan_splitmix64(void);
-
 /* Lehmer64 */
 static void RanSetSeed_lehmer64(uint64_t uSeed);
 static uint32_t IRan_lehmer64(void);
@@ -91,6 +86,14 @@ static double DRan_lehmer64(void);
 static void RanSetSeed_MWC256(uint64_t uSeed);
 static uint32_t IRan_MWC256(void);
 static double DRan_MWC256(void);
+
+
+/* Splitmix64 for internal use */
+static void RanSetSeed_splitmix64(uint64_t uSeed);
+static uint32_t IRan_splitmix64(void);
+// static double DRan_splitmix64(void); // not needed
+
+
 
 
 
@@ -523,7 +526,7 @@ uint32_t IRan_MELG19937(void)
 }
 
 /* This is the same uint64 to (0,1) double converter as used
-   for Xoshiro256 and Splitmix64 
+   for Xoshiro256
    
    We may also test the conversion routines included in the
    MELG code (compare for speed, may be less portable) */ 
@@ -548,10 +551,16 @@ double DRan_MELG19937(void)
 /*==========================================================================
  * xoshiro256+ and splitmix64
  *
- * xoshiro256+ and splitmix64 for the generation of 32-bit unsigned integers 
- * and 53-bit mantissa doubles
- *
  * see: https://prng.di.unimi.it/
+ *
+ *
+ * Xoshiro256+ for the generation of 32-bit unsigned integers 
+ * and 53-bit mantissa doubles
+ * 
+ * Splitmix64 will be used internally for initialisation of other PRNGs
+ * from a single 64-bit initial seed. Splitmix64 passes statistical tests
+ * (https://github.com/lemire/testingRNG), and has only 64 bits of state.
+ *
  *
  * Original code with cosmetic changes (renaming of variables and functions) 
  * and routines for direct output of uint32s and (0,1) doubles 
@@ -682,10 +691,9 @@ void xoshiro256p_long_jump(void) {
  * splitmix64
  *
  * Can be used to generate a 4 x 64-bit seed for xoshiro256+
- * from a single 64-bit seed
+ * from a single 64-bit seed, and also to initialize other PRNGs
  *
- * And can also be used in its own right to generate random 
- * numbers, as it has also been reported to pass statistical tests
+ * It has been reported to pass statistical tests
  * (https://github.com/lemire/testingRNG)
  * 
  * names of global variables and functions were adapted (Werts, 2024)
@@ -774,8 +782,7 @@ double DRan_xoshiro256p(void)
 
 
 /*----------------------------------------------------------------
- * Interface between splitmix64 and zigrandom
- *  based on the xoshiro256+ interface
+ * Interface to splitmix64
  *----------------------------------------------------------------*/
 
 void RanSetSeed_splitmix64(uint64_t uSeed)
@@ -788,6 +795,8 @@ uint32_t IRan_splitmix64(void)
 	return (uint32_t)(splitmix64_next() >> 32);
 }
 
+/*
+//   unused legacy function
 double DRan_splitmix64(void)
 {
 	uint64_t xx;
@@ -797,6 +806,7 @@ double DRan_splitmix64(void)
 	
 	return (xx * 0x1.0p-53);
 }
+*/
 
 /*==========================================================================*/
 
@@ -1021,13 +1031,6 @@ void    RanSetRan(const char *sRan)
 		s_fnIRanu = IRan_xoshiro256p;
 		s_fnRanSetSeed = RanSetSeed_xoshiro256p;
 		s_fnRanJump = RanJump_xoshiro256p;
-	}
-	else if (strcmp(sRan, "Splitmix64") == 0)
-	{
-		s_fnDRanu = DRan_splitmix64;
-		s_fnIRanu = IRan_splitmix64;
-		s_fnRanSetSeed = RanSetSeed_splitmix64;
-		s_fnRanJump = NULL;
 	}
 	else if (strcmp(sRan, "MELG19937") == 0)
 	{

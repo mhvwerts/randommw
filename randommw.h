@@ -1,12 +1,8 @@
 /*==========================================================================
  * randommw.h 
- * combines Doornik's zigrandom.h and zignor.h, with modifications and
- * extensions
+ * combines Doornik's zigrandom.h and zignor.h, with modifications
  *
- * - MWC8222 has been renamed to MWC256
- * - Xoshiro256+ PRNG has been added (64 bit)
- * - Splitmix64 PRNG has been added (64 bit)
- * - MELG19937-64 PRNG has been added (64 bit)
+ * Some elements have been moved to randommw.c and made static.
  *
  * Werts, 2024
  *==========================================================================*/
@@ -15,7 +11,6 @@
 
 
 /* PRNG interface */
-
 typedef double 		( * DRANFUN)(void);
 typedef uint32_t 	( * IRANFUN)(void);
 typedef void   		( * RANSETSEEDFUN)(uint64_t);
@@ -26,7 +21,6 @@ void    RanSetRanExt(DRANFUN DRanFun, IRANFUN IRanFun,
 		             RANSETSEEDFUN RanSetSeedFun, RANJUMPFUN RanJumpFun);
 void    RanSetSeed(uint64_t uSeed);
 void    RanJumpRan(uint64_t uJumpsize);
-
 double  DRanU(void);
 uint32_t  IRanU(void);
 
