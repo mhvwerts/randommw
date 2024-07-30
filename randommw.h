@@ -15,12 +15,15 @@ typedef double 		( * DRANFUN)(void);
 typedef uint32_t 	( * IRANFUN)(void);
 typedef void   		( * RANSETSEEDFUN)(uint64_t);
 typedef void   		( * RANJUMPFUN)(uint64_t);
+typedef void		( * RANSEEDJUMPFUN)(uint64_t, uint64_t);
 
 void    RanSetRan(const char *sRan);
 void    RanSetRanExt(DRANFUN DRanFun, IRANFUN IRanFun, 
-		             RANSETSEEDFUN RanSetSeedFun, RANJUMPFUN RanJumpFun);
+		             RANSETSEEDFUN RanSetSeedFun, RANJUMPFUN RanJumpFun,
+					 RANSEEDJUMPFUN RanSeedJumpFun);
 void    RanSetSeed(uint64_t uSeed);
 void    RanJumpRan(uint64_t uJumpsize);
+void	RanSeedJump(uint64_t uSeed, uint64_t uJumpsize);
 double  DRanU(void);
 uint32_t  IRanU(void);
 

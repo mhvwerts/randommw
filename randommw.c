@@ -69,24 +69,27 @@
 static void RanSetSeed_MELG19937(uint64_t uSeed);
 static uint32_t IRan_MELG19937(void);
 static double DRan_MELG19937(void);
-static void RanJump_MELG19937(uint64_t uJumps); 
+static void RanJump_MELG19937(uint64_t uJumps);
+static void RanSeedJump_MELG19937(uint64_t uSeed, uint64_t uJumpsize);
 
 /* Xoshiro256+ Blackman & Vigna */
 static void RanSetSeed_xoshiro256p(uint64_t uSeed);
 static uint32_t IRan_xoshiro256p(void);
 static double DRan_xoshiro256p(void);
-static void RanJump_xoshiro256p(uint64_t uJumps); 
+static void RanJump_xoshiro256p(uint64_t uJumps);
+static void RanSeedJump_xoshiro256p(uint64_t uSeed, uint64_t uJumpsize);
 
 /* Lehmer64 */
 static void RanSetSeed_lehmer64(uint64_t uSeed);
 static uint32_t IRan_lehmer64(void);
 static double DRan_lehmer64(void);
+static void RanSeedJump_lehmer64(uint64_t uSeed, uint64_t uJumpsize);
 
 /* MWC256 (aka MWC8222) George Marsaglia */
 static void RanSetSeed_MWC256(uint64_t uSeed);
 static uint32_t IRan_MWC256(void);
 static double DRan_MWC256(void);
-
+static void RanSeedJump_MWC256(uint64_t uSeed, uint64_t uJumpsize);
 
 /* Splitmix64 for internal use */
 static void RanSetSeed_splitmix64(uint64_t uSeed);
@@ -506,21 +509,30 @@ static void melg_add(struct melg_state *state)
  * Interface between MELG19937 and zigrandom
  *----------------------------------------------------------------*/
 
-void RanSetSeed_MELG19937(uint64_t uSeed)
+static void RanSetSeed_MELG19937(uint64_t uSeed)
 {
 	melg_init_uint64seed(uSeed);
 }
 
-void RanJump_MELG19937(uint64_t uJumps)
+static void RanJump_MELG19937(uint64_t uJumps)
 {
 	uint64_t i;
 	for (i=0; i<uJumps; i++)
 		melg_jump();
 }
 
+static void RanSeedJump_MELG19937(uint64_t uSeed, uint64_t uJumpsize)
+{
+	RanSetSeed_MELG19937(uSeed);
+	if (uJumpsize > 0)
+	{
+		RanJump_MELG19937(uJumpsize);
+	}
+}
+
 /* The 32-bit unsigned integer IRan random routine uses only
    the upper 32 bits of MELG19937. */
-uint32_t IRan_MELG19937(void)
+static uint32_t IRan_MELG19937(void)
 {
 	return (uint32_t)(melg_next_uint64() >> 32);
 }
@@ -530,7 +542,7 @@ uint32_t IRan_MELG19937(void)
    
    We may also test the conversion routines included in the
    MELG code (compare for speed, may be less portable) */ 
-double DRan_MELG19937(void)
+static double DRan_MELG19937(void)
 {
 	uint64_t xx;
 	
@@ -737,7 +749,7 @@ uint64_t splitmix64_next() {
  * Interface between xoshiro256+ and zigrandom
  *----------------------------------------------------------------*/
 
-void RanSetSeed_xoshiro256p(uint64_t uSeed)
+static void RanSetSeed_xoshiro256p(uint64_t uSeed)
 {
 	RanSetSeed_splitmix64(uSeed); // seed splitmix
 	
@@ -748,22 +760,31 @@ void RanSetSeed_xoshiro256p(uint64_t uSeed)
 	xoshiro256p_s[3] = splitmix64_next();
 }
 
-void RanJump_xoshiro256p(uint64_t uJumps)
+static void RanJump_xoshiro256p(uint64_t uJumps)
 {
 	uint64_t i;
 	for (i=0; i<uJumps; i++)
 		xoshiro256p_long_jump();
 }
 
+static void RanSeedJump_xoshiro256p(uint64_t uSeed, uint64_t uJumpsize)
+{
+	RanSetSeed_xoshiro256p(uSeed);
+	if (uJumpsize > 0)
+	{
+		RanJump_xoshiro256p(uJumpsize);
+	}
+}
+
 /* The 32-bit unsigned integer IRan random routine uses only
    the upper 32 bits of Xoshiro256+, which are of highest
    random quality, and should pass all randomness tests. */
-uint32_t IRan_xoshiro256p(void)
+static uint32_t IRan_xoshiro256p(void)
 {
 	return (uint32_t)(xoshiro256p_next() >> 32);
 }
 
-double DRan_xoshiro256p(void)
+static double DRan_xoshiro256p(void)
 {
 	uint64_t xx;
 	
@@ -785,12 +806,12 @@ double DRan_xoshiro256p(void)
  * Interface to splitmix64
  *----------------------------------------------------------------*/
 
-void RanSetSeed_splitmix64(uint64_t uSeed)
+static void RanSetSeed_splitmix64(uint64_t uSeed)
 {
 	splitmix64_x = uSeed; // seed splitmix
 }
 
-uint32_t IRan_splitmix64(void)
+static uint32_t IRan_splitmix64(void)
 {
 	return (uint32_t)(splitmix64_next() >> 32);
 }
@@ -841,6 +862,10 @@ static __uint128_t g_lehmer64_state;
 * Society 68.225 (1999): 249-260.
 */
 
+
+/*
+// replaced by RanSetSeed_lehmer64()
+
 static inline void lehmer64_seed(uint64_t uSeed)
 {
 	RanSetSeed_splitmix64(uSeed); // seed Splitmix64
@@ -848,6 +873,7 @@ static inline void lehmer64_seed(uint64_t uSeed)
 	g_lehmer64_state = (((__uint128_t)splitmix64_next()) << 64) +
                           splitmix64_next();
 }
+*/
 
 static inline uint64_t lehmer64()
 {
@@ -861,17 +887,47 @@ static inline uint64_t lehmer64()
  *  based on the xoshiro256+ interface
  *----------------------------------------------------------------*/
 
-void RanSetSeed_lehmer64(uint64_t uSeed)
+static void RanSetSeed_lehmer64(uint64_t uSeed)
 {
-	lehmer64_seed(uSeed);
+	RanSeedJump_lehmer64(uSeed, 0);
 }
 
-uint32_t IRan_lehmer64(void)
+/* Lehmer64 does not support 'jumps'
+
+   Here, we provide a mechanism to obtain a differently 
+   initialized Lehmer64 from the same seed, but using 'uJumpsize'
+   to forward the initializing Splitmix generator.
+   
+   There is a tiny, tiny chance that the different streams are
+   not completely independent. This should still be tested exhaustively,
+   but at present it seems the best method to obtain reproducible
+   independent streams with this generator.
+
+*/
+static void RanSeedJump_lehmer64(uint64_t uSeed, uint64_t uJumpsize)
+{
+	unsigned int i;
+
+	RanSetSeed_splitmix64(uSeed); // seed Splitmix64
+	
+	// forward the Splitmix generator
+	for (i = 0; i < uJumpsize; i++)
+	{
+		splitmix64_next();
+		splitmix64_next();
+	}
+	
+	// initialize the 128-bit state using 2x Splitmix64
+	g_lehmer64_state = (((__uint128_t)splitmix64_next()) << 64) +
+                          splitmix64_next();
+}
+
+static uint32_t IRan_lehmer64(void)
 {
 	return (uint32_t)(lehmer64() >> 32);
 }
 
-double DRan_lehmer64(void)
+static double DRan_lehmer64(void)
 {
 	uint64_t xx;
 	
@@ -928,23 +984,52 @@ static uint32_t s_auiStateMWC[MWC_R];
    MWC256 needs to be initialized with 256 unsigned 32-bit integers.
    These are obtained from SplitMix64.
 */
-void RanSetSeed_MWC256(uint64_t uSeed)
+static void RanSetSeed_MWC256(uint64_t uSeed)
 {
-	unsigned int i;
+	RanSeedJump_MWC256(uSeed, 0);
+}
+
+/* MWC256 does not support 'jumps'
+
+   Here, we provide a mechanism to obtain a (radically) differently 
+   initialized MWC256 from the same seed, but using 'uJumpsize'
+   to forward the initializing Splitmix generator.
+   
+   There is a tiny, tiny chance that the different streams are
+   not completely independent. This should still be tested exhaustively,
+   but at present it seems the best method to obtain reproducible
+   independent streams with this generator.
+
+*/
+static void RanSeedJump_MWC256(uint64_t uSeed, uint64_t uJumpsize)
+{
+	unsigned int i, j;
 	
 	// Do not forget to (re-)initialize all state variables.
 	s_uiStateMWC = MWC_R - 1;
 	s_uiCarryMWC = MWC_C;
 
-	// Use SplitMix64 to generate the initial state for MWC256
+	// Initialize Splitmix using uSeed
 	RanSetSeed_splitmix64(uSeed);
+	
+	// Forward Splitmix64 'uJumpsize' times a full initialization,
+	// i.e. MWC_R * uJumpsize
+	for (j = 0; j < uJumpsize; j++)
+	{
+		for (i = 0; i < MWC_R; i++)
+		{
+			IRan_splitmix64(); // use this for consistency
+		}
+	}
+
+	// Use the forwarded SplitMix64 to generate the initial state for MWC256
 	for (i = 0; i < MWC_R; ++i)
 	{
 		s_auiStateMWC[i] = IRan_splitmix64(); // get uint32 from splitmix64
 	}
 }
 
-uint32_t IRan_MWC256(void)
+static uint32_t IRan_MWC256(void)
 {
 	uint64_t t;
 
@@ -955,7 +1040,7 @@ uint32_t IRan_MWC256(void)
     return (uint32_t)t;
 }
 
-double DRan_MWC256(void)
+static double DRan_MWC256(void)
 /* Generate random doubles with full-precision 52-bit mantissa using MWC256 */
 {
 	uint64_t t1, t2;
@@ -983,6 +1068,7 @@ static DRANFUN s_fnDRanu = DRan_MWC256;
 static IRANFUN s_fnIRanu = IRan_MWC256;
 static RANSETSEEDFUN s_fnRanSetSeed = RanSetSeed_MWC256;
 static RANJUMPFUN s_fnRanJump = NULL;
+static RANSEEDJUMPFUN s_fnRanSeedJump = RanSeedJump_MWC256;
 
 double  DRanU(void)
 {
@@ -999,12 +1085,25 @@ void    RanSetSeed(uint64_t uSeed)
 	(*s_fnRanSetSeed)(uSeed);
 }
 
+/* Direct jumps currently only supported by Xoshiro256+ and MELG19937.
 
-// Jumps currently only supported by Xoshiro256+ and MELG19937
-// Calling jump for other generators will crash your program!
+   Calling RanJumpRan for other generators will crash your program!
+*/
 void    RanJumpRan(uint64_t uJumpsize)
 {
 	(*s_fnRanJump)(uJumpsize);
+}
+
+/* Combined setting of random seed and 'jumping'
+
+   This provides a way to emulate jumps for PRNG that do not support
+   RanJumpRan, by initializing the PRNG using numbers further on
+   in the sequence of initialization random numbers from
+   Splitmix64.
+*/
+void	RanSeedJump(uint64_t uSeed, uint64_t uJumpsize)
+{
+	(*s_fnRanSeedJump)(uSeed, uJumpsize);
 }
 
 
@@ -1017,6 +1116,7 @@ void    RanSetRan(const char *sRan)
 		s_fnIRanu = IRan_MWC256;
 		s_fnRanSetSeed = RanSetSeed_MWC256;
 		s_fnRanJump = NULL;
+		s_fnRanSeedJump = RanSeedJump_MWC256;
 	}
 	else if (strcmp(sRan, "Lehmer64") == 0)
 	{
@@ -1024,6 +1124,7 @@ void    RanSetRan(const char *sRan)
 		s_fnIRanu = IRan_lehmer64;
 		s_fnRanSetSeed = RanSetSeed_lehmer64;
 		s_fnRanJump = NULL;
+		s_fnRanSeedJump = RanSeedJump_lehmer64;
 	}
 	else if (strcmp(sRan, "Xoshiro256+") == 0)
 	{
@@ -1031,6 +1132,7 @@ void    RanSetRan(const char *sRan)
 		s_fnIRanu = IRan_xoshiro256p;
 		s_fnRanSetSeed = RanSetSeed_xoshiro256p;
 		s_fnRanJump = RanJump_xoshiro256p;
+		s_fnRanSeedJump = RanSeedJump_xoshiro256p;
 	}
 	else if (strcmp(sRan, "MELG19937") == 0)
 	{
@@ -1038,25 +1140,29 @@ void    RanSetRan(const char *sRan)
 		s_fnIRanu = IRan_MELG19937;
 		s_fnRanSetSeed = RanSetSeed_MELG19937;
 		s_fnRanJump = RanJump_MELG19937;
+		s_fnRanSeedJump = RanSeedJump_MELG19937;	
 	}
-	else // DEFAULT
+	else // DEFAULT = FAULT
 	{
 		s_fnDRanu = NULL;
 		s_fnIRanu = NULL;
 		s_fnRanSetSeed = NULL;
 		s_fnRanJump = NULL;
+		s_fnRanSeedJump = NULL;
 	}
 	/* END if ... else if ... else block */
 }
 
 
-void    RanSetRanExt(DRANFUN DRanFun, IRANFUN IRanFun,
-		             RANSETSEEDFUN RanSetSeedFun, RANJUMPFUN RanJumpFun)
+void    RanSetRanExt(DRANFUN DRanFun, IRANFUN IRanFun, 
+		             RANSETSEEDFUN RanSetSeedFun, RANJUMPFUN RanJumpFun,
+					 RANSEEDJUMPFUN RanSeedJumpFun)
 {
 	s_fnDRanu = DRanFun;
 	s_fnIRanu = IRanFun;
 	s_fnRanSetSeed = RanSetSeedFun;
 	s_fnRanJump = RanJumpFun;
+	s_fnRanSeedJump = RanSeedJumpFun;
 }
 /*---------------- END uniform random number generators --------------------*/
 
@@ -1164,9 +1270,5 @@ void  RanInit(const char *sRan, uint64_t uSeed, uint64_t uJumpsize)
 	{
 		RanSetRan(sRan);
 	}
-	RanSetSeed(uSeed);
-	if (uJumpsize > 0)
-	{
-		RanJumpRan(uJumpsize);
-	}
+	RanSeedJump(uSeed, uJumpsize);
 }
