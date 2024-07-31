@@ -1,4 +1,4 @@
-Original sci.math post containing original MWC256 PRNG source code
+Post in sci.math Usenet group containing original MWC256 PRNG source code
     archived as https://groups.google.com/g/sci.math/c/k3kVM8KwR-s/m/jxPdZl8XWZkJ 
 	code also included in http://www0.cs.ucl.ac.uk/staff/D.Jones/GoodPracticeRNG.pdf
 
