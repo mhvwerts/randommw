@@ -1,0 +1,139 @@
+Original sci.math post containing original MWC256 PRNG source code
+    archived as https://groups.google.com/g/sci.math/c/k3kVM8KwR-s/m/jxPdZl8XWZkJ 
+	code also included in http://www0.cs.ucl.ac.uk/staff/D.Jones/GoodPracticeRNG.pdf
+
+
+George Marsaglia
+
+Feb 25, 2003, 4:25:34PM
+to
+
+"flip" <flip_...@safebunch.com> wrote in message
+news:10460956...@news-1.nethere.net...
+
+> Hi All,
+> there are many RNG's out there with huge periods.
+> For example:
+> 1. Mersenne Twister (MT)
+> 2. Add With Carry (AWC)
+> 3. Subtract With Borrow (SWB)
+> 4. KISS
+> There is also Marsaglia's DIEHARD battery of tests to test the quality of
+> these RNGs (in fact, 2 - 4 are his RNG's). Obviously, these RNGs are not
+> good for crypto applications, but are good for anything Monte Carlo.
+> Questions:
+> 1. My question is this, which is the best overall RNG out there, where
+best
+> means that it passes all of the DIEHARD tests and has a huge period?
+> 2. Is there a RNG which can be implemented in a FPGA to simulate "White
+> Noise"?
+> Thank you for any references (as I am looking through Google as we speak),
+> but cannot believe that many haven't been down this road.
+> Flip
+>
+
+It doesn't seem reasonable to consider that there is a best.
+Just as the "Miss America Contest" judges have to view
+talent, swim suit, evening gown and interview scores
+before voting, for RNG's one should consider test results,
+speed, simplicity, period length, size and possibly other
+factors, depending on the application. (My own judging
+tends to give extra weight to the equivalent of the
+swim-suit competition---beauty of the underlying theory.)
+
+Most of us are likely to give the most weight to
+test results: the RNG should provide results
+consistent with the underlying probability theory
+for a wide variety of simulation problems, such
+as those in the Diehard battery of tests.
+
+The C procedure MWC256( ) listed below rates highly in all
+categories. So does CMWC4096( ) below, with, so far,
+record period.
+
+The Mersenne Twister rates highly in test results and
+period-length, but poorly in simplicity and swim-suit,
+(beauty of underlying theory). C versions I have
+seen take several dozens of statements.
+
+Add-With-Carry (AWC) and Subtract-With-Borrow (SWB)
+have been supplemented with Multiply-With-Carry (MWC)
+and Complimentary-Multiply-With-Carry (CMWC).
+I use SWB now only to provide IEEE standard 64-bit reals
+in [0,1) directly, without the usual floating of integers. It was
+the basis for the RNG in MATLAB.
+
+The KISS generator rates highly in test results and
+simplicity, as Keep It Simple Stupid was the theme for
+its name. Its swim suit rating is high (in each of the
+three pieces). The KISS RNG is used to provide randomness
+by several gaming companies. The third component has had
+several versions, depending on whether it is implemented in
+assembler, C or Fortran. Unfortunately, Fortran does
+not provide an easy way to get the top and bottom halves
+of the 64-bit product of two 32-bit integers.
+
+Here is the latest version of KISS, in C:
+
+unsigned long KISS(){
+static unsigned long x=123456789,y=362436000,z=521288629,c=7654321;
+unsigned long long t, a=698769069LL;
+x=69069*x+12345;
+y^=(y<<13); y^=(y>>17); y^=(y<<5);
+t=a*z+c; c=(t>>32);
+return x+y+(z=t);
+}
+
+Choosing random seed values for x,y,z,and c provides
+an excellent source of 32-bit random integers, with
+period >2^125---adequate, but much shorter than the
+remarkable 2^19937 of the Mersenne Twister or the
+2^8222 of MWC256( ). For a really really long period,
+consider CMWC4096( ) with period 2^131086,
+listed after MWC256( ):
+
+
+static unsigned long Q[256],c=362436;
+unsigned long MWC256(void){
+unsigned long long t,a=1540315826LL;
+unsigned long x;
+static unsigned char i=255;
+t=a*Q[++i]+c; c=(t>>32);
+x=t+c; if(x<c){x++;c++;}
+return(Q[i]=x); }
+
+Choosing random values for the static array Q[256] and c
+puts you at a random starting place in the base b=2^32-1
+expansion of 1/p, where p is the prime 1540315826*b^256-1.
+The expansion of 1/p has cycles of more than 10^2475 base-b
+'digits', and they are returned in reverse order, from a
+random starting point in the cycle. One attraction of
+MWC256 is that it allows us to index the Q-array with
+a byte.
+
+Now for the really really big:
+
+static unsigned long Q[4096],c=362436;
+unsigned long CMWC4096(void){
+unsigned long long t, a=18782LL;
+static unsigned long i=4095;
+unsigned long x,r=0xfffffffe;
+i=(i+1)&4095;
+t=a*Q[i]+c;
+c=(t>>32); x=t+c; if(x<c){x++;c++;}
+return(Q[i]=r-x); }
+
+This RNG has period > 2^131086, some 10^33459 times as
+long as that of the Mersenne Twister and rates highly in
+all categories. It provides the more than 10^39460 base-b digits
+in the expansion of (p-1)/p, where p is the prime
+p=18782*b^4096+1. , b=2^32-1. Those base-b 'digits' are
+returned in reverse order from a random starting point
+determined by the random choice of the initial values in Q[4096] and c.
+
+
+The above are my own ratings. As a judge in the contest,
+you may want to rate them yourself, and compare .
+
+George Marsaglia
+
