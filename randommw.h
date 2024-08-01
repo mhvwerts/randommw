@@ -12,20 +12,20 @@
 
 /* PRNG interface */
 typedef double 		( * DRANFUN)(void);
-typedef uint32_t 	( * IRANFUN)(void);
+typedef uint32_t 	( * U32RANFUN)(void);
 typedef void   		( * RANSETSEEDFUN)(uint64_t);
 typedef void   		( * RANJUMPFUN)(uint64_t);
 typedef void		( * RANSEEDJUMPFUN)(uint64_t, uint64_t);
 
 void    RanSetRan(const char *sRan);
-void    RanSetRanExt(DRANFUN DRanFun, IRANFUN IRanFun, 
+void    RanSetRanExt(DRANFUN DRanFun, U32RANFUN U32RanFun, 
 		             RANSETSEEDFUN RanSetSeedFun, RANJUMPFUN RanJumpFun,
 					 RANSEEDJUMPFUN RanSeedJumpFun);
 void    RanSetSeed(uint64_t uSeed);
 void    RanJumpRan(uint64_t uJumpsize);
 void	RanSeedJump(uint64_t uSeed, uint64_t uJumpsize);
 double  DRanU(void);
-uint32_t  IRanU(void);
+uint32_t  U32RanU(void);
 
 /* from zignor.h */
 double  DRanNormalZig(void);

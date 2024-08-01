@@ -60,40 +60,40 @@
 /* static definitions
 
    External interface to PRNG should go via
-   RanInit, DranU, IranU, DRanNormalZig
+   RanInit, DranU, U32RanU, DRanNormalZig
    
 */
 
 
 /* MELG19937-64 Harase & Kimoto */
 static void RanSetSeed_MELG19937(uint64_t uSeed);
-static uint32_t IRan_MELG19937(void);
+static uint32_t U32Ran_MELG19937(void);
 static double DRan_MELG19937(void);
 static void RanJump_MELG19937(uint64_t uJumps);
 static void RanSeedJump_MELG19937(uint64_t uSeed, uint64_t uJumpsize);
 
 /* Xoshiro256+ Blackman & Vigna */
 static void RanSetSeed_xoshiro256p(uint64_t uSeed);
-static uint32_t IRan_xoshiro256p(void);
+static uint32_t U32Ran_xoshiro256p(void);
 static double DRan_xoshiro256p(void);
 static void RanJump_xoshiro256p(uint64_t uJumps);
 static void RanSeedJump_xoshiro256p(uint64_t uSeed, uint64_t uJumpsize);
 
 /* Lehmer64 */
 static void RanSetSeed_lehmer64(uint64_t uSeed);
-static uint32_t IRan_lehmer64(void);
+static uint32_t U32Ran_lehmer64(void);
 static double DRan_lehmer64(void);
 static void RanSeedJump_lehmer64(uint64_t uSeed, uint64_t uJumpsize);
 
 /* MWC256 (aka MWC8222) George Marsaglia */
 static void RanSetSeed_MWC256(uint64_t uSeed);
-static uint32_t IRan_MWC256(void);
+static uint32_t U32Ran_MWC256(void);
 static double DRan_MWC256(void);
 static void RanSeedJump_MWC256(uint64_t uSeed, uint64_t uJumpsize);
 
 /* Splitmix64 for internal use */
 static void RanSetSeed_splitmix64(uint64_t uSeed);
-static uint32_t IRan_splitmix64(void);
+static uint32_t U32Ran_splitmix64(void);
 // static double DRan_splitmix64(void); // not needed
 
 
@@ -530,9 +530,9 @@ static void RanSeedJump_MELG19937(uint64_t uSeed, uint64_t uJumpsize)
 	}
 }
 
-/* The 32-bit unsigned integer IRan random routine uses only
+/* The 32-bit unsigned integer U32Ran random routine uses only
    the upper 32 bits of MELG19937. */
-static uint32_t IRan_MELG19937(void)
+static uint32_t U32Ran_MELG19937(void)
 {
 	return (uint32_t)(melg_next_uint64() >> 32);
 }
@@ -776,10 +776,10 @@ static void RanSeedJump_xoshiro256p(uint64_t uSeed, uint64_t uJumpsize)
 	}
 }
 
-/* The 32-bit unsigned integer IRan random routine uses only
+/* The 32-bit unsigned integer U32Ran random routine uses only
    the upper 32 bits of Xoshiro256+, which are of highest
    random quality, and should pass all randomness tests. */
-static uint32_t IRan_xoshiro256p(void)
+static uint32_t U32Ran_xoshiro256p(void)
 {
 	return (uint32_t)(xoshiro256p_next() >> 32);
 }
@@ -811,7 +811,7 @@ static void RanSetSeed_splitmix64(uint64_t uSeed)
 	splitmix64_x = uSeed; // seed splitmix
 }
 
-static uint32_t IRan_splitmix64(void)
+static uint32_t U32Ran_splitmix64(void)
 {
 	return (uint32_t)(splitmix64_next() >> 32);
 }
@@ -922,7 +922,7 @@ static void RanSeedJump_lehmer64(uint64_t uSeed, uint64_t uJumpsize)
                           splitmix64_next();
 }
 
-static uint32_t IRan_lehmer64(void)
+static uint32_t U32Ran_lehmer64(void)
 {
 	return (uint32_t)(lehmer64() >> 32);
 }
@@ -1018,18 +1018,18 @@ static void RanSeedJump_MWC256(uint64_t uSeed, uint64_t uJumpsize)
 	{
 		for (i = 0; i < MWC_R; i++)
 		{
-			IRan_splitmix64(); // use this for consistency
+			U32Ran_splitmix64(); // use this for consistency
 		}
 	}
 
 	// Use the forwarded SplitMix64 to generate the initial state for MWC256
 	for (i = 0; i < MWC_R; ++i)
 	{
-		s_auiStateMWC[i] = IRan_splitmix64(); // get uint32 from splitmix64
+		s_auiStateMWC[i] = U32Ran_splitmix64(); // get uint32 from splitmix64
 	}
 }
 
-static uint32_t IRan_MWC256(void)
+static uint32_t U32Ran_MWC256(void)
 {
 	uint64_t t;
 
@@ -1065,7 +1065,7 @@ static double DRan_MWC256(void)
 /* Set default to MWC256 uniform generator 
    (doubles with 52 bits mantissa randomness) */
 static DRANFUN s_fnDRanu = DRan_MWC256;
-static IRANFUN s_fnIRanu = IRan_MWC256;
+static U32RANFUN s_fnU32Ranu = U32Ran_MWC256;
 static RANSETSEEDFUN s_fnRanSetSeed = RanSetSeed_MWC256;
 static RANJUMPFUN s_fnRanJump = NULL;
 static RANSEEDJUMPFUN s_fnRanSeedJump = RanSeedJump_MWC256;
@@ -1075,9 +1075,9 @@ double  DRanU(void)
     return (*s_fnDRanu)();
 }
 
-uint32_t IRanU(void)
+uint32_t U32RanU(void)
 {
-    return (*s_fnIRanu)();
+    return (*s_fnU32Ranu)();
 }
 
 void    RanSetSeed(uint64_t uSeed)
@@ -1113,7 +1113,7 @@ void    RanSetRan(const char *sRan)
 	if (strcmp(sRan, "MWC256") == 0)
 	{
 		s_fnDRanu = DRan_MWC256;
-		s_fnIRanu = IRan_MWC256;
+		s_fnU32Ranu = U32Ran_MWC256;
 		s_fnRanSetSeed = RanSetSeed_MWC256;
 		s_fnRanJump = NULL;
 		s_fnRanSeedJump = RanSeedJump_MWC256;
@@ -1121,7 +1121,7 @@ void    RanSetRan(const char *sRan)
 	else if (strcmp(sRan, "Lehmer64") == 0)
 	{
 		s_fnDRanu = DRan_lehmer64;
-		s_fnIRanu = IRan_lehmer64;
+		s_fnU32Ranu = U32Ran_lehmer64;
 		s_fnRanSetSeed = RanSetSeed_lehmer64;
 		s_fnRanJump = NULL;
 		s_fnRanSeedJump = RanSeedJump_lehmer64;
@@ -1129,7 +1129,7 @@ void    RanSetRan(const char *sRan)
 	else if (strcmp(sRan, "Xoshiro256+") == 0)
 	{
 		s_fnDRanu = DRan_xoshiro256p;
-		s_fnIRanu = IRan_xoshiro256p;
+		s_fnU32Ranu = U32Ran_xoshiro256p;
 		s_fnRanSetSeed = RanSetSeed_xoshiro256p;
 		s_fnRanJump = RanJump_xoshiro256p;
 		s_fnRanSeedJump = RanSeedJump_xoshiro256p;
@@ -1137,7 +1137,7 @@ void    RanSetRan(const char *sRan)
 	else if (strcmp(sRan, "MELG19937") == 0)
 	{
 		s_fnDRanu = DRan_MELG19937;
-		s_fnIRanu = IRan_MELG19937;
+		s_fnU32Ranu = U32Ran_MELG19937;
 		s_fnRanSetSeed = RanSetSeed_MELG19937;
 		s_fnRanJump = RanJump_MELG19937;
 		s_fnRanSeedJump = RanSeedJump_MELG19937;	
@@ -1145,7 +1145,7 @@ void    RanSetRan(const char *sRan)
 	else // DEFAULT = FAULT
 	{
 		s_fnDRanu = NULL;
-		s_fnIRanu = NULL;
+		s_fnU32Ranu = NULL;
 		s_fnRanSetSeed = NULL;
 		s_fnRanJump = NULL;
 		s_fnRanSeedJump = NULL;
@@ -1154,12 +1154,12 @@ void    RanSetRan(const char *sRan)
 }
 
 
-void    RanSetRanExt(DRANFUN DRanFun, IRANFUN IRanFun, 
+void    RanSetRanExt(DRANFUN DRanFun, U32RANFUN U32RanFun, 
 		             RANSETSEEDFUN RanSetSeedFun, RANJUMPFUN RanJumpFun,
 					 RANSEEDJUMPFUN RanSeedJumpFun)
 {
 	s_fnDRanu = DRanFun;
-	s_fnIRanu = IRanFun;
+	s_fnU32Ranu = U32RanFun;
 	s_fnRanSetSeed = RanSetSeedFun;
 	s_fnRanJump = RanJumpFun;
 	s_fnRanSeedJump = RanSeedJumpFun;
@@ -1236,7 +1236,7 @@ double  DRanNormalZig(void)
 	for (;;)
 	{
 		u = 2 * DRanU() - 1;
-		i = IRanU() & 0x7F;
+		i = U32RanU() & 0x7F;
 		/* first try the rectangular boxes */
 		if (fabs(u) < s_adZigR[i])		 
 			return u * s_adZigX[i];

@@ -1,4 +1,3 @@
-
 # randommw: Generator of pseudo-random numbers with uniform or Gaussian distribution (in C)
 
 
@@ -71,14 +70,14 @@ Calculate and return the next random number in the normally distributed sequence
 Obtain a double-precision floating point random number from a uniform distribution (0, 1) using the active PRNG. Full 52-bit mantissa randomness.
 
 
-### `uint32_t IranU(void)`
+### `uint32_t U32RanU(void)`
 
-Obtain an unsigned 32-bit integer random number from the active PRNG. Only 32-bit unsigned values are supplied, for historic reasons: the ZIGNOR algorithm relies on 32-bit unsigned integers. Interfaces supplying other types of random numbers may be developed.
+Obtain an unsigned 32-bit integer random number from the active uniform PRNG. In case of a 64-bit PRNG, the 32-bit number is typically obtained from the most significant bits (the other half is discarded). Only 32-bit unsigned values are supplied for now: the ZIGNOR algorithm relies in part on 32-bit unsigned integers. Interfaces supplying other types of random numbers may be developed.
 
 
 ## Compilation, development and testing
 
-At present, the development uses `gcc` exclusively, both on Windows via [mingw-w64](https://www.mingw-w64.org/)/[w64devkit](https://github.com/skeeto/w64devkit) and on standard Linux (64 bit). The code relies on standard C (C99, for the part that is supported by `gcc`). There is a Makefile in the root folder, and a separate Makefile for the test programs in `../tests`.
+At present, the development uses `gcc` exclusively, on 64-bit x86-64 systems, both on Windows via [mingw-w64](https://www.mingw-w64.org/)/[w64devkit](https://github.com/skeeto/w64devkit) and on standard Linux. The code relies on standard C (C99). There is a Makefile in the root folder, and a separate Makefile for the test programs in `../tests`.
 
 
 ## Status 
@@ -108,11 +107,11 @@ Standard PRNGs generally generate uniformly distributed random numbers. Since we
 
 ### Doornik's ziggurat code
 
-A particularly portable, structured and relatively well-documented C code for the generation of normally distributed random numbers is provided by J. A. Doornik.[9] It has been tried and tested independently in the literature.[10] The Doornik code was found to compile and run correctly on both Linux and Windows gcc implementation, and will very likely work with other systems and C compilers. By default, it uses Marsaglias's MWC256 (sometimes called MWC8222) PRNG as the source of a uniform random variable, which is then converted to a random variable with a Gaussian distribution using a ziggurat algorithm. We used the Doornik ziggurat code as the starting point for our development.
+A particularly portable, structured and relatively well-documented C code for the generation of normally distributed random numbers is provided by J. A. Doornik.[9] It has been tried and tested independently in the literature.[10] The Doornik code was found to compile and run correctly on both Linux and Windows gcc implementation, and will very likely work with other systems and C compilers. By default, it uses Marsaglias's MWC256[20] (sometimes called MWC8222) PRNG as the source of a uniform random variable, which is then converted to a random variable with a Gaussian distribution using a ziggurat algorithm. We used the Doornik ziggurat code as the starting point for our development.
 
 In the folder `original_ziggurat_code_doornik` the source code of the original [ZIP archive](https://www.doornik.com/research/ziggurat_code.zip) by Doornik is conserved. The compiled executables from the ZIP file have been removed for security reasons, and the "makefile" folders for gcc have been renamed to emphasize the 32-bit *vs* 64-bit nature of the targeted executables. The file contents have been left intact.
 
-The files necessary for development (`zignor.c`, `zignor.h`, `zigrandom.c` and `zigrandom.h`) have been copied from `original_ziggurat_code_doornik` to the root folder. `zignor` and `zigrandom` were merged into `randommw` and have undergone some changes. The modifications only concern the structure of the code, not the fundamental algorithms. The MWC8222 routines have been renamed to MWC256. The function`DRan_MWC256()` generates random doubles with full 52-bit mantissa resolution (instead of 32-bit in Doornik's original) via two iterations of the MWC256 generator (see [11]).
+The files necessary for development (`zignor.c`, `zignor.h`, `zigrandom.c` and `zigrandom.h`) have been copied from `original_ziggurat_code_doornik` to the root folder. `zignor` and `zigrandom` were merged into `randommw` and have undergone further changes. The modifications only concern the structure of the code, not the fundamental algorithms. The MWC8222 routines have been renamed to MWC256. The function`DRan_MWC256()` generates random doubles with full 52-bit mantissa resolution (instead of 32-bit in Doornik's original) via two iterations of the MWC256 generator (see [11]).
 
 
 ### Other ziggurat codes
@@ -164,7 +163,7 @@ Bioinformatics Applications", http://www0.cs.ucl.ac.uk/staff/d.jones/GoodPractic
 
 [18] https://www.phy.duke.edu/~rgb/General/dieharder.php
 
-[19]  Collins, J. C. "Testing, Selection, and Implementation of Random Number Generators", Defense Technical Information Center: Fort Belvoir, VA, 2008. doi:[10.21236/ADA486379](https://doi.org/10.21236/ADA486379).
+[19] Collins, J. C. "Testing, Selection, and Implementation of Random Number Generators", Defense Technical Information Center: Fort Belvoir, VA, 2008. doi:[10.21236/ADA486379](https://doi.org/10.21236/ADA486379).
 
 [20] G. Marsaglia, [post to sci.math Usenet group, 25 Feb 2003](https://groups.google.com/g/sci.math/c/k3kVM8KwR-s/m/jxPdZl8XWZkJ )
 
