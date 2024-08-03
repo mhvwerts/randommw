@@ -45,11 +45,11 @@ int main(void)
 
 	TimerHeader();
 
-	RanInit("MWC256", 0, 0);
+	RanInit("MWC8222", 0, 0);
 	Timer("Warming up",		DRanU, 		RanSetSeed, cm/10); 
 	
-	RanInit("MWC256", 0, 0);
-	Timer("MWC256",			DRanU, 		RanSetSeed, cm);
+	RanInit("MWC8222", 0, 0);
+	Timer("MWC8222",		DRanU, 		RanSetSeed, cm);
 		
 	RanInit("Lehmer64", 0, 0);
 	Timer("Lehmer64",		DRanU, 		RanSetSeed, cm);
@@ -62,8 +62,8 @@ int main(void)
 
 
 
-	RanInit("MWC256", 0, 0);
-	Timer("ZIGNOR MWC256",			DRanNormalZig, 			RanSetSeed, cm);
+	RanInit("MWC8222", 0, 0);
+	Timer("ZIGNOR MWC8222",			DRanNormalZig, 			RanSetSeed, cm);
 		
 	RanInit("Lehmer64", 0, 0);
 	Timer("ZIGNOR Lehmer64",		DRanNormalZig, 			RanSetSeed, cm);
@@ -74,8 +74,8 @@ int main(void)
 	RanInit("MELG19937", 0, 0);
 	Timer("ZIGNOR MELG19937",		DRanNormalZig, 			RanSetSeed, cm);
 	
-	RanInit("MWC256", 0, 0);
-	Timer("ZIGNOR MWC256 (again)",	DRanNormalZig, 			RanSetSeed, cm);
+	RanInit("MWC8222", 0, 0);
+	Timer("ZIGNOR MWC8222 (again)",	DRanNormalZig, 			RanSetSeed, cm);
 
 	
 	/* Code snippet to see if the program indeed crashes gracefully if

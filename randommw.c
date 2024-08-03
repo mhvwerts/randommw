@@ -15,12 +15,15 @@
  * This source file is organized as follows.
  *
  * A. MELG19937-64 PRNG by Harase & Kimoto
- * B. xoshiro256+ PRNG by Vigna & Blackman, and the splitmix64 PRNG
- * C. modified version of 'zigrandom.c' containing the MWC256 (aka MWC8222)
- *    PRNG, and interfacing functions for 'zignor.c'
- * D. modified version of 'zignor.c' with Doornik's ziggurat algorithm for
- *    generation of normally distributed random numbers
- * E. Additional content
+ * B. Xoshiro256+ PRNG by Vigna & Blackman, and the splitmix64 PRNG (for
+ *    initialization of other PRNGs using a single 64-bit seed)
+ * C. Lehmer64 PRNG from Lemire
+ * D. MWC8222 by Marsaglia, from Doornik's 'zigrandom.c' (Marsaglia originally
+      called this generator MWC256, but there is now a different algorithm
+	  with that name.)
+ * E. Doornik's ziggurat algorithm for generation of normally distributed 
+ *    random numbers (from 'zignor.c')
+ * F. Additional functionality
  *
  *==========================================================================
  *==========================================================================*/
@@ -85,11 +88,11 @@ static uint32_t U32Ran_lehmer64(void);
 static double DRan_lehmer64(void);
 static void RanSeedJump_lehmer64(uint64_t uSeed, uint64_t uJumpsize);
 
-/* MWC256 (aka MWC8222) George Marsaglia */
-static void RanSetSeed_MWC256(uint64_t uSeed);
-static uint32_t U32Ran_MWC256(void);
-static double DRan_MWC256(void);
-static void RanSeedJump_MWC256(uint64_t uSeed, uint64_t uJumpsize);
+/* MWC8222 George Marsaglia */
+static void RanSetSeed_MWC8222(uint64_t uSeed);
+static uint32_t U32Ran_MWC8222(void);
+static double DRan_MWC8222(void);
+static void RanSeedJump_MWC8222(uint64_t uSeed, uint64_t uJumpsize);
 
 /* Splitmix64 for internal use */
 static void RanSetSeed_splitmix64(uint64_t uSeed);
@@ -948,9 +951,8 @@ static double DRan_lehmer64(void)
  *
  *  - Fixed a gcc warning
  *  - Implemented full 52-bit mantissa precision generator of random doubles
- *    in (0, 1) from pairs of 32-bit unsignedintegers coming from MWC256
+ *    in (0, 1) from pairs of 32-bit unsignedintegers coming from MWC8222
  *    (Doornik callled this generator "MWC_52")
- *  - Renamed MWC8222 to MWC256
  *  - Use stdint.h for exact integer widths
  *  - Fully initialize the generator (256 uint32s) from a single 64-bit
  *    seed, using SplitMix64
@@ -981,18 +983,18 @@ static uint32_t s_auiStateMWC[MWC_R];
 
 /* New-style RanSetSeed interface (single unsigned 64-bit integer seed)
  
-   MWC256 needs to be initialized with 256 unsigned 32-bit integers.
+   MWC8222 needs to be initialized with 256 unsigned 32-bit integers.
    These are obtained from SplitMix64.
 */
-static void RanSetSeed_MWC256(uint64_t uSeed)
+static void RanSetSeed_MWC8222(uint64_t uSeed)
 {
-	RanSeedJump_MWC256(uSeed, 0);
+	RanSeedJump_MWC8222(uSeed, 0);
 }
 
-/* MWC256 does not support 'jumps'
+/* MWC8222 does not support 'jumps'
 
    Here, we provide a mechanism to obtain a (radically) differently 
-   initialized MWC256 from the same seed, but using 'uJumpsize'
+   initialized MWC8222 from the same seed, but using 'uJumpsize'
    to forward the initializing Splitmix generator.
    
    There is a tiny, tiny chance that the different streams are
@@ -1001,7 +1003,7 @@ static void RanSetSeed_MWC256(uint64_t uSeed)
    independent streams with this generator.
 
 */
-static void RanSeedJump_MWC256(uint64_t uSeed, uint64_t uJumpsize)
+static void RanSeedJump_MWC8222(uint64_t uSeed, uint64_t uJumpsize)
 {
 	unsigned int i, j;
 	
@@ -1022,14 +1024,14 @@ static void RanSeedJump_MWC256(uint64_t uSeed, uint64_t uJumpsize)
 		}
 	}
 
-	// Use the forwarded SplitMix64 to generate the initial state for MWC256
+	// Use the forwarded SplitMix64 to generate the initial state for MWC8222
 	for (i = 0; i < MWC_R; ++i)
 	{
 		s_auiStateMWC[i] = U32Ran_splitmix64(); // get uint32 from splitmix64
 	}
 }
 
-static uint32_t U32Ran_MWC256(void)
+static uint32_t U32Ran_MWC8222(void)
 {
 	uint64_t t;
 
@@ -1040,8 +1042,8 @@ static uint32_t U32Ran_MWC256(void)
     return (uint32_t)t;
 }
 
-static double DRan_MWC256(void)
-/* Generate random doubles with full-precision 52-bit mantissa using MWC256 */
+static double DRan_MWC8222(void)
+/* Generate random doubles with full-precision 52-bit mantissa using MWC8222 */
 {
 	uint64_t t1, t2;
 
@@ -1062,13 +1064,13 @@ static double DRan_MWC256(void)
 
 /*------------------- uniform random number generators ----------------------*/
 
-/* Set default to MWC256 uniform generator 
+/* Set default to MWC8222 uniform generator 
    (doubles with 52 bits mantissa randomness) */
-static DRANFUN s_fnDRanu = DRan_MWC256;
-static U32RANFUN s_fnU32Ranu = U32Ran_MWC256;
-static RANSETSEEDFUN s_fnRanSetSeed = RanSetSeed_MWC256;
+static DRANFUN s_fnDRanu = DRan_MWC8222;
+static U32RANFUN s_fnU32Ranu = U32Ran_MWC8222;
+static RANSETSEEDFUN s_fnRanSetSeed = RanSetSeed_MWC8222;
 static RANJUMPFUN s_fnRanJump = NULL;
-static RANSEEDJUMPFUN s_fnRanSeedJump = RanSeedJump_MWC256;
+static RANSEEDJUMPFUN s_fnRanSeedJump = RanSeedJump_MWC8222;
 
 double  DRanU(void)
 {
@@ -1110,13 +1112,13 @@ void	RanSeedJump(uint64_t uSeed, uint64_t uJumpsize)
 void    RanSetRan(const char *sRan)
 {
 	/* BEGIN if ... else if ... else block */
-	if (strcmp(sRan, "MWC256") == 0)
+	if (strcmp(sRan, "MWC8222") == 0)
 	{
-		s_fnDRanu = DRan_MWC256;
-		s_fnU32Ranu = U32Ran_MWC256;
-		s_fnRanSetSeed = RanSetSeed_MWC256;
+		s_fnDRanu = DRan_MWC8222;
+		s_fnU32Ranu = U32Ran_MWC8222;
+		s_fnRanSetSeed = RanSetSeed_MWC8222;
 		s_fnRanJump = NULL;
-		s_fnRanSeedJump = RanSeedJump_MWC256;
+		s_fnRanSeedJump = RanSeedJump_MWC8222;
 	}
 	else if (strcmp(sRan, "Lehmer64") == 0)
 	{
