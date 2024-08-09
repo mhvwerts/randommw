@@ -127,7 +127,7 @@ Several implementations of ziggurat algorithms for generation of normally distri
 
 ### Selection of included RNGs
 
-The Random number generators included in `randommw.c` were chosen on the basis of published reports of statistical quality and speed, support in the scientific literature, and availability of clear and working C source code, aiming for diversity of the underlying algorithms. It is not our aim to have an exhaustive collection of RNGs, but a well-chosen set of modern 'scientific grade' RNGs that allows for running simulation code using different RNGs to check consistency.
+The random number generators included in `randommw.c` were chosen on basis of published reports of statistical quality and speed, support in the scientific literature, and availability of clear and working C source code, aiming for diversity of the underlying algorithms. It is not our aim to have an exhaustive collection of RNGs, but a well-chosen set of modern 'scientific grade' RNGs that allows for running simulation code using different RNGs to check consistency.
 
 
 | RNG         |   native output   | state memory  | arithmetic ops.  |
@@ -142,9 +142,9 @@ The Random number generators included in `randommw.c` were chosen on the basis o
 
 
 - MWC8222 is a "lag-256 multiply-with-carry" generator.[13] It was the original RNG used by Doornik for ZIGNOR,[9] and was found there to have good statistical properties.
-- Lehmer64 is a [Lehmer generator}(https://en.wikipedia.org/wiki/Lehmer_random_number_generator) proposed by Lemire as a very simple (and supposedly fast) algorithm generating numbers of sufficient statistic quality.[14] The implementation requires 128-bit `__uint128_t` integer arithmetic.
+- Lehmer64 is a [Lehmer generator](https://en.wikipedia.org/wiki/Lehmer_random_number_generator) proposed by Lemire as a very simple (and supposedly fast) algorithm generating numbers of sufficient statistic quality.[14] The implementation requires 128-bit `__uint128_t` integer arithmetic.
 - PCG64DXSM[24] is the standard RNG of Numpy,[25] and is extensively being used as a result. It has good statistical quality.[14] The implementation requires 128-bit `__uint128_t` integer arithmetic.
-- Xoshiro256+ is a fast and efficient RNG algorithm that can be used to generate doubles (52-bit mantissa) and 32-bit integers, as needed by ZIGNOR, with good statistical quality. (a)a For 64-bit numbers, the slightly more elaborate Xoshiro256++ is recommended.[12] 
+- Xoshiro256+ is a fast and efficient RNG algorithm that can be used to generate doubles (52-bit mantissa) and 32-bit integers, as needed by ZIGNOR, with good statistical quality. (a) For 64-bit number generation, the slightly more elaborate Xoshiro256++ is recommended.[12] 
 - MELG19937 is a modern 64-bit variant of the well-known Mersenne Twister RNG.[17][23] It has good statistical behaviour.
 
 
