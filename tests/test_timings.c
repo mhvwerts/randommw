@@ -53,6 +53,9 @@ int main(void)
 		
 	RanInit("Lehmer64", 0, 0);
 	Timer("Lehmer64",		DRanU, 		RanSetSeed, cm);
+
+	RanInit("PCG64DXSM", 0, 0);
+	Timer("PCG64DXSM",		DRanU, 		RanSetSeed, cm);
 	
 	RanInit("Xoshiro256+", 0, 0);
 	Timer("Xoshiro256+",	DRanU,		RanSetSeed, cm);
@@ -67,6 +70,9 @@ int main(void)
 		
 	RanInit("Lehmer64", 0, 0);
 	Timer("ZIGNOR Lehmer64",		DRanNormalZig, 			RanSetSeed, cm);
+
+	RanInit("PCG64DXSM", 0, 0);
+	Timer("ZIGNOR PCG64DXSM",		DRanNormalZig, 			RanSetSeed, cm);
 	
 	RanInit("Xoshiro256+", 0, 0);
 	Timer("ZIGNOR Xoshiro256+",		DRanNormalZig, 			RanSetSeed, cm);

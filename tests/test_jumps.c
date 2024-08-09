@@ -46,7 +46,7 @@ int main(int argc, char **argv)
 			break;
 		case 4:
 			zigseed = (uint64_t)atoi(argv[1]);
-			Njumps = (uint64_t)atoll(argv[2]); // zero initial jumps
+			Njumps = (uint64_t)atoll(argv[2]);
 			printf("%s pseudo-random number generator selected.\n", argv[3]);
 			RanInit(argv[3], zigseed, 0);
 			break;

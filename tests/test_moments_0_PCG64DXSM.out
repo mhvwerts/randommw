@@ -1,0 +1,31 @@
+PCG64DXSM pseudo-random number generator selected.
+seed = 0
+  0.940164
+ -1.278500
+  0.416846
+  2.300119
+ -0.376072
+  0.735070
+  0.501873
+ -1.461554
+ -1.611108
+  0.531154
+  1.594593
+  1.887835
+ -0.332731
+ -1.298825
+ -0.533120
+ -0.385580
+ -1.010358
+ -0.519817
+ -1.291002
+  0.629365
+Created 1000000000 normally distributed pseudo-random numbers...
+X1: 0.000000 (Expected 0)
+X2: 0.999994 (Expected 1)
+X3: -0.000052 (Expected 0)
+X4: 2.999819 (Expected 3)
+X5: -0.000735 (Expected 0)
+X6: 14.998320 (Expected 15)
+X7: -0.010272 (Expected 0)
+X8: 104.992858 (Expected 105)
