@@ -88,6 +88,13 @@ static uint32_t U32Ran_lehmer64(void);
 static double DRan_lehmer64(void);
 static void RanSeedJump_lehmer64(uint64_t uSeed, uint64_t uJumpsize);
 
+/* PCG64DXSM by O'Neill */
+static void RanSetSeed_pcg64dxsm(uint64_t uSeed);
+static uint32_t U32Ran_pcg64dxsm(void);
+static double DRan_pcg64dxsm(void);
+static void RanJump_pcg64dxsm(uint64_t uJumps);
+static void RanSeedJump_pcg64dxsm(uint64_t uSeed, uint64_t uJumpsize);
+
 /* MWC8222 George Marsaglia */
 static void RanSetSeed_MWC8222(uint64_t uSeed);
 static uint32_t U32Ran_MWC8222(void);
@@ -944,6 +951,392 @@ static double DRan_lehmer64(void)
 
 
 
+
+/*==========================================================================*
+	PCG64DXSM by Melissa O'Neill
+	Based on the Numpy C version by M. O'Neill & R. Kern
+ *==========================================================================*/
+
+/*
+ * PCG64DXSM Random Number Generation for C. 
+ *
+ * Modified code, based on Numpy code 
+ *  https://github.com/numpy/numpy/blob/main/numpy/random/src/pcg64/pcg64.c
+ *  https://github.com/numpy/numpy/blob/main/numpy/random/src/pcg64/pcg64.h
+ *  (August 2024)
+ *
+ * Copyright 2014 Melissa O'Neill <oneill@pcg-random.org>
+ * Copyright 2015 Robert Kern <robert.kern@gmail.com>
+ *
+ * Modifications 2024  Martinus Werts <martinus.werts@univ-angers.fr> 
+ * - Code contains exclusively the PCG64DXSM generator, all other generator
+ *   code has been removed. 
+ * - Emulation code for 128-bit operations has been removed. The code now
+ *   explicitly requires `__uint128_t` to be supported by the compiler.
+ *   gcc and clang support this.
+ * - This version was tested and confirmed to give the same random number
+ *   sequence and state changes as Python/Numpy's PCG64DXSM generator, 
+ *   also when 'jumping'. This was done for 
+ *       rng = numpy.random.PCG64DXSM(seed = 0)
+ *   by setting the state/increment to exactly the same values as in
+ *   Numpy before the sequence generation and jumps.
+ * - Initialization/seeding of PCG64DXSM in Numpy depends on Numpy's
+ *   PRNG infrastructure. When using this stand-alone PCG64DXSM, the 
+ *   initialization can be done, e.g., using a sequence from SplitMix64.
+ *   This means that there will be no compatibility in seed values
+ *   between Numpy and the stand-alone PCG64DXSM, except if the whole
+ *   state/increment is set explicitly.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * For additional information about the PCG random number generation scheme,
+ * including its license and other licensing options, visit
+ *
+ *     https://www.pcg-random.org
+ *
+ * Relicensed MIT in May 2019
+ *
+ * The MIT License
+ *
+ * PCG Random Number Generation for C.
+ *
+ * Copyright 2014 Melissa O'Neill <oneill@pcg-random.org>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+
+
+/*-----------------------------------------------------------
+   Modified pcg64dxsm.h header
+  -----------------------------------------------------------*/
+
+
+#if defined(__GNUC_GNU_INLINE__) && !defined(__cplusplus)
+#error Nonstandard GNU inlining semantics. Compile with -std=c99 or better.
+#endif
+
+
+typedef __uint128_t pcg128_t;
+#define PCG_128BIT_CONSTANT(high, low) (((pcg128_t)(high) << 64) + low)
+
+typedef struct { pcg128_t state; } pcg_state_128;
+
+typedef struct {
+  pcg128_t state;
+  pcg128_t inc;
+} pcg_state_setseq_128;
+
+#define PCG_DEFAULT_MULTIPLIER_HIGH 2549297995355413924ULL
+#define PCG_DEFAULT_MULTIPLIER_LOW 4865540595714422341ULL
+
+#define PCG_DEFAULT_MULTIPLIER_128                                             \
+  PCG_128BIT_CONSTANT(PCG_DEFAULT_MULTIPLIER_HIGH, PCG_DEFAULT_MULTIPLIER_LOW)
+#define PCG_DEFAULT_INCREMENT_128                                              \
+  PCG_128BIT_CONSTANT(6364136223846793005ULL, 1442695040888963407ULL)
+#define PCG_STATE_SETSEQ_128_INITIALIZER                                       \
+  {                                                                            \
+    PCG_128BIT_CONSTANT(0x979c9a98d8462005ULL, 0x7d3e9cb6cfe0549bULL)          \
+    , PCG_128BIT_CONSTANT(0x0000000000000001ULL, 0xda3e39cb94b95bdbULL)        \
+  }
+
+#define PCG_CHEAP_MULTIPLIER_128 (0xda942042e4dd58b5ULL)
+
+
+static inline void pcg_cm_step_r(pcg_state_setseq_128 *rng) {
+  rng-> state = rng->state * PCG_CHEAP_MULTIPLIER_128 + rng->inc;
+}
+
+static inline uint64_t pcg_output_cm_128_64(pcg128_t state) {
+  uint64_t hi = state >> 64;
+  uint64_t lo = state;
+
+  lo |= 1;
+  hi ^= hi >> 32;
+  hi *= 0xda942042e4dd58b5ULL;
+  hi ^= hi >> 48;
+  hi *= lo;
+  return hi;
+}
+
+static inline void pcg_cm_srandom_r(pcg_state_setseq_128 *rng, pcg128_t initstate, pcg128_t initseq) {
+  rng->state = 0U;
+  rng->inc = (initseq << 1u) | 1u;
+  pcg_cm_step_r(rng);
+  rng->state += initstate;
+  pcg_cm_step_r(rng);
+}
+
+static inline uint64_t pcg_cm_random_r(pcg_state_setseq_128* rng)
+{
+    uint64_t ret = pcg_output_cm_128_64(rng->state);
+    pcg_cm_step_r(rng);
+    return ret;
+}
+
+/*-----------------------------------------------------------
+   End of modified pcg64dxsm.h header
+  -----------------------------------------------------------*/
+
+
+/*-----------------------------------------------------------
+   Modified pcg64dxsm.c code
+  -----------------------------------------------------------*/
+
+/* Multi-step advance functions (jump-ahead, jump-back)
+ *
+ * The method used here is based on Brown, "Random Number Generation
+ * with Arbitrary Stride,", Transactions of the American Nuclear
+ * Society (Nov. 1994).  The algorithm is very similar to fast
+ * exponentiation.
+ *
+ * Even though delta is an unsigned integer, we can pass a
+ * signed integer to go backwards, it just goes "the long way round".
+ */
+
+pcg128_t pcg_advance_lcg_128(pcg128_t state, pcg128_t delta, pcg128_t cur_mult,
+                             pcg128_t cur_plus) {
+  pcg128_t acc_mult = 1u;
+  pcg128_t acc_plus = 0u;
+  while (delta > 0) {
+    if (delta & 1) {
+      acc_mult *= cur_mult;
+      acc_plus = acc_plus * cur_mult + cur_plus;
+    }
+    cur_plus = (cur_mult + 1) * cur_plus;
+    cur_mult *= cur_mult;
+    delta /= 2;
+  }
+  return acc_mult * state + acc_plus;
+}
+
+
+static inline void pcg_cm_advance_r(pcg_state_setseq_128 *rng, pcg128_t delta) {
+    rng->state = pcg_advance_lcg_128(rng->state, delta,
+                                     PCG_128BIT_CONSTANT(0, PCG_CHEAP_MULTIPLIER_128),
+                                     rng->inc);
+}
+
+/*-----------------------------------------------------------
+   PCG64DXSM interface routines M. Werts 2024
+  -----------------------------------------------------------*/
+
+/*
+Jumping the PCG64DXSM generator for parallelization
+adapted from numpy.random.PCG64DXSM.jumped()
+
+Background:
+https://numpy.org/doc/stable/reference/random/parallel.html
+*/
+static void _pcg64dxsm_jump(pcg_state_setseq_128 *stateptr, uint64_t Njumps)
+{
+	pcg128_t delta, step;
+
+	// from numpy.random.PCG64DXSM.jump_inplace()
+	step = PCG_128BIT_CONSTANT(0x9e3779b97f4a7c15, 0xf39cc0605cedc835);
+	
+	// calculate delta from Njumps 
+	// (see  PCG64DXSM.jump_inplace()  and PCG64DXSM.advance()
+	delta = step * (pcg128_t)Njumps;
+	
+	// execute jump-ahead
+	pcg_cm_advance_r(stateptr, delta);
+}
+
+
+/*
+Initialize the PCG64DXSM state from the uint64_t seed[2] and inc[2] arrays
+
+*/
+static void _pcg64dxsm_seed_state(pcg_state_setseq_128 *stateptr, uint64_t *seed, uint64_t *inc)
+{
+  pcg128_t s, i;
+  s = (((pcg128_t)seed[0]) << 64) | seed[1];
+  i = (((pcg128_t)inc[0]) << 64) | inc[1];
+
+  pcg_cm_srandom_r(stateptr, s, i);
+  /* Originally in Numpy code:
+     pcg64_srandom_r(stateptr, s, i);
+   * That is what the PCG64DXSM Numpy interface code calls.
+	 However, in the original C code there is also a specific 'cm'
+	 initialization function pcg_cm_srandom_r() and we use that here. 
+	 The present version of the code faithfully reproduces the random
+	 sequences and jump behaviour of Numpy's PCG64DXSM RNG, if
+	 initialized to exactly the same state.
+  */
+}
+
+
+/*
+Simple interface, with globally stored state (only single generator possible
+per process)
+*/
+
+// single, globally stored state vector for PCG64DXSM
+pcg_state_setseq_128 pcg64dxsm_state;
+
+
+// Get raw uint64 from PCG64DXSM
+extern uint64_t pcg64dxsm_next()
+{
+	return pcg_cm_random_r(&pcg64dxsm_state);
+}
+
+// Get state for PCG64DXSM, for diagnostic purpose
+extern void pcg64dxsm_getstateinc(uint64_t *dataptr)
+{
+	dataptr[0] = (uint64_t)(pcg64dxsm_state.state >> 64);
+	dataptr[1] = (uint64_t)pcg64dxsm_state.state;
+
+	dataptr[2] = (uint64_t)(pcg64dxsm_state.inc >> 64);
+	dataptr[3] = (uint64_t)pcg64dxsm_state.inc;
+}
+
+/*----------------------------------------------------------------
+ * Interface between PCG64DXSM and zigrandom
+ *----------------------------------------------------------------*/
+	
+/*
+	**State and Seeding**
+	(adapted from Numpy documentation and source)
+
+    The `PCG64DXSM` state vector consists of 2 unsigned 128-bit values,
+    which are represented externally as Python ints. One is the state of the
+    PRNG, which is advanced by a linear congruential generator (LCG). The
+    second is a fixed odd increment used in the LCG.
+
+    In the Numpy implementation, the input seed is processed by `SeedSequence`
+	to generate both values. The increment is not independently settable.
+
+	    # Seed the _bitgen
+        val = self._seed_seq.generate_state(4, np.uint64)
+        pcg64_set_seed(&self.rng_state,
+                       <uint64_t *>np.PyArray_DATA(val),
+                       (<uint64_t *>np.PyArray_DATA(val) + 2))
+
+	The pcg64_set_seed() ensures that inc is odd and otherwise properly
+	populated. It also generates a suitable value for state.
+
+	Here, we use a similar (but numerically different) approach where the
+	values are generated using Splitmix64 which is seeded with the input seed. 
+	
+	However, there is no correspondence in the precise PCG64DXSM state after
+	intialization with a given initial seed value between Numpy and 
+	randommw.c. To enable testing and comparison, we have included two cases 
+	(uSeed==0, uSeed==12345) where the state of PCG64DXSM is exactly
+	initialized as in numpy.random.PCG64DXSM.
+*/
+
+static void RanSetSeed_pcg64dxsm(uint64_t uSeed)
+{
+	uint64_t seed[2];
+	uint64_t inc[2];
+
+	if (uSeed==0)
+	{
+		// For the special case uSeed = 0,
+		// adjust state to match numpy.randomPCG64DXSM(seed = 0)
+		pcg64dxsm_state.state = 
+			PCG_128BIT_CONSTANT(0x1aa1b5345996452d, 0x09585eb7a69561e3);
+		pcg64dxsm_state.inc   =
+			PCG_128BIT_CONSTANT(0x418ddadb3af71a82, 0x588133bc447873a9);
+	}
+	else if (uSeed==12345)
+	{
+		// For the special case uSeed = 12345,
+		// adjust state to match numpy.randomPCG64DXSM(seed = 12345)
+		pcg64dxsm_state.state = 
+			PCG_128BIT_CONSTANT(0x1905e0335aae9634, 0x9199b0d09775add5);
+		pcg64dxsm_state.inc   =
+			PCG_128BIT_CONSTANT(0xc9c7353e6e2b1f28, 0x7d761f2d4027fae7);
+	}
+	else
+	{
+		RanSetSeed_splitmix64(uSeed); // seed splitmix
+		
+		// use splitmix to fill required seed, inc for PCG64DXSM
+		// Numpy uses a similar initialization, but not using
+		// SplitMix
+		seed[0] = splitmix64_next();
+		seed[1] = splitmix64_next();
+		inc[0]  = splitmix64_next();
+		inc[1]  = splitmix64_next();
+
+		_pcg64dxsm_seed_state(&pcg64dxsm_state, seed, inc);
+	}
+}
+
+static void RanJump_pcg64dxsm(uint64_t uJumps)
+{
+	_pcg64dxsm_jump(&pcg64dxsm_state, uJumps);
+}
+
+static void RanSeedJump_pcg64dxsm(uint64_t uSeed, uint64_t uJumpsize)
+{
+	RanSetSeed_pcg64dxsm(uSeed);
+	if (uJumpsize > 0)
+	{
+		RanJump_pcg64dxsm(uJumpsize);
+	}
+}
+
+
+/* The 32-bit unsigned integer U32Ran random routine uses only
+   the upper 32 bits of Xoshiro256+, which are of highest
+   random quality, and should pass all randomness tests. */
+static uint32_t U32Ran_pcg64dxsm(void)
+{
+	return (uint32_t)(pcg_cm_random_r(&pcg64dxsm_state) >> 32);
+}
+
+static double DRan_pcg64dxsm(void)
+{
+	uint64_t xx;
+	
+	/*
+	xx = 0;
+	while (xx == 0)
+		xx = (xoshiro256p_next() >> 11);
+	*/
+	
+	while ((xx = (pcg_cm_random_r(&pcg64dxsm_state) >> 11)) == 0)
+		;
+	
+	return (xx * 0x1.0p-53);
+}
+
+/*==========================================================================*/
+
+
+
+
+
+
 /*==========================================================================
  *  Modified version of zigrandom.c
  *  original code by J. A. Doornik, 2005
@@ -1127,6 +1520,14 @@ void    RanSetRan(const char *sRan)
 		s_fnRanSetSeed = RanSetSeed_lehmer64;
 		s_fnRanJump = NULL;
 		s_fnRanSeedJump = RanSeedJump_lehmer64;
+	}
+	else if (strcmp(sRan, "PCG64DXSM") == 0)
+	{
+		s_fnDRanu = DRan_pcg64dxsm;
+		s_fnU32Ranu = U32Ran_pcg64dxsm;
+		s_fnRanSetSeed = RanSetSeed_pcg64dxsm;
+		s_fnRanJump = RanJump_pcg64dxsm;
+		s_fnRanSeedJump = RanSeedJump_pcg64dxsm;
 	}
 	else if (strcmp(sRan, "Xoshiro256+") == 0)
 	{

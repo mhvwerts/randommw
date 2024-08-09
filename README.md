@@ -7,7 +7,7 @@ Numerical simulations for scientific and technological applications regularly re
 
 This small C library provides all the basic functionality for such scientific random number generation. It is an integrated and curated collection of tried & tested code described in the literature. More background is provided at the end of this README document. It is monolithic: only `randommw.c` and `randommw.h` need to be included in the project, and it does not need any other non-standard library. The generators are amazingly fast, enabling, in our case, simulation of large numbers of Brownian particles with long trajectories.
  
-The library includes four random number generators (RNGs): MWC8222,[9][19][20] Lehmer64,[14] Xoshiro256+,[12][22] and MELG19937-64.[17][23] These generate sequences of uniformly distributed integer random numbers and have been reported to pass the relevant statistical tests (see the cited references). There is a ziggurat algorithm, ZIGNOR, coded by J. A. Doornik,[9] for obtaining random numbers with a Gaussian distribution using these RNGs. The quality of the generated Gaussian distributions has been checked via their raw moments, following McFarland.[10]
+The library includes five random number generators (RNGs): MWC8222,[9][19][20] Lehmer64,[14] PCG64DXSM,[24][25] Xoshiro256+,[12][22] and MELG19937-64.[17][23] These generate sequences of uniformly distributed integer random numbers and have been reported to pass the relevant statistical tests (see the cited references). There is a ziggurat algorithm, ZIGNOR, coded by J. A. Doornik,[9] for obtaining random numbers with a Gaussian distribution using these RNGs. The quality of the generated Gaussian distributions has been checked via their raw moments, following McFarland.[10]
 
 <p align="center">
   <img src="./tests/histogram.png" width="450">
@@ -53,11 +53,11 @@ Choose, initialize and use only a single RNG from `randommw.c` in each C program
 
 Initialize the ziggurat algorithm, set the RNG and its random seed, and optionally "fast-forward" the generator. The random seed should always be supplied by the user, in order to have reproducible random number streams. If a different stream is needed, provide a different seed.
 
-If `sRan` is an empty string, the default generator will be used: MWC8222. At present, the possible choices for `sRan` are `"MWC8222"`, `"Lehmer64"`, `"Xoshiro256+"` and `"MELG19937"`. The string is case-sensitive, and should correspond exactly to one of these options; else, your program will crash. 
+If `sRan` is an empty string, the default generator will be used: MWC8222. At present, the possible choices for `sRan` are `"MWC8222"`, `"Lehmer64"`, `"PCG64DXSM"`, `"Xoshiro256+"` and `"MELG19937"`. The string is case-sensitive, and should correspond exactly to one of these options; else, your program will crash. 
 
 The random seed `uSeed` is always an unsigned 64-bit integer, independently of the specific random number generator. A RNG-specific routine uses this seed to fully initialize the RNG. 
 
-For `uJumpsize > 0`, the initialization routine will "fast-forward" the generator, starting from the initially seeded state.  This mechanism, often called "(block) splitting", is of importance for reliable parallelization of computer simulations.[2] In the case of `"Xoshiro256+"` and`"MELG19937"`, long "jumps" of the generator are performed algorithmically. Each of the `uJumpsize` jumps fast-forwards the RNG by 2^192 (Xoshiro256+) or 2^256 (MELG19937) steps, giving access to a stream of random numbers that is guaranteed to be independent of the other streams from the same seed. `"MWC8222"` and `"Lehmer64"` do not provide such algorithmic jumps to independent sequences from the same seed. For these RNGs, we have resorted to using `uJumpsize` to initialize these generators differently from the same `uSeed` by forwarding the internal Splitmix64 generator used for initialization of these RNGs. This very probably leads to independent sequences, although there is no formal guarantee in this case. It is still better than simply using different seeds.
+For `uJumpsize > 0`, the initialization routine will "fast-forward" the generator, starting from the initially seeded state.  This mechanism, often called "(block) splitting", is of importance for reliable parallelization of computer simulations.[2] In the case of `"PCG64DXSM"`, `"Xoshiro256+"` and`"MELG19937"`, long "jumps" of the generator are performed algorithmically. Each of the `uJumpsize` jumps fast-forwards the RNG by 2^192 (Xoshiro256+) or 2^256 (MELG19937) steps, giving access to a stream of random numbers that is guaranteed to be independent of the other streams from the same seed. `"MWC8222"` and `"Lehmer64"` do not provide such algorithmic jumps to independent sequences from the same seed. For these RNGs, we have resorted to using `uJumpsize` to initialize these generators differently from the same `uSeed` by forwarding the internal Splitmix64 generator used for initialization of these RNGs. This very probably leads to independent sequences, although there is no formal guarantee in this case. It is still much better than simply using different seeds.
 
 
 ### `double DRanNormalZig(void)`
@@ -82,7 +82,7 @@ At present, the development uses `gcc` exclusively, on 64-bit x86-64 systems, bo
 
 ## Status 
 
-We have validated the RNGs and are using them for normally distributed random numbers in numerical simulations of colloidal systems, The code is functional and is now contained in a monolithic module (`randommw.c`) that can be easily included in a scientific computing project in C. The random numbers have a good Gaussian distribution (tested up to 8 raw moments, see `tests/test_moments.c`). They are generated with high throughput, using MWC8222, Lehmer64, Xoshiro256+ or MELG19937-64 as underlying uniform RNG.
+We have validated the RNGs and are using them for normally distributed random numbers in numerical simulations of colloidal systems, The code is functional and is now contained in a monolithic module (`randommw.c`) that can be easily included in a scientific computing project in C. The random numbers have a good Gaussian distribution (tested up to 8 raw moments, see `tests/test_moments.c`). They are generated with high throughput, using MWC8222, Lehmer64, PCG64DXSM, Xoshiro256+ or MELG19937-64 as underlying uniform RNG.
 
 Generated normally distributed random numbers can be written to a binary file using `genzignor.c`. These numbers have been used successfully for Brownian simulations in [DDM Toolkit](https://github.com/mhvwerts/ddm-toolkit), giving consistent results between the simulation and subsequent DDM analysis of the simulated image stack.
 
@@ -125,6 +125,28 @@ Several implementations of ziggurat algorithms for generation of normally distri
 - [Voss](https://www.seehuhn.de/pages/ziggurat.html) provides a concise and well-structured ziggurat code that is part of the GNU Scientific Library ([function `gsl_ran_gaussian_ziggurat()`](https://www.gnu.org/software/gsl/doc/html/randist.html#c.gsl_ran_gaussian_ziggurat) ). It is based on the original algorithm by Marsaglia & Tsang,[13] with some simplifications, and might suffer from the same randomness correlation problem as found by Doornik.[9]
 
 
+### Selection of included RNGs
+
+The Random number generators included in `randommw.c` were chosen on the basis of published reports of statistical quality and speed, support in the scientific literature, and availability of clear and working C source code, aiming for diversity of the underlying algorithms. It is not our aim to have an exhaustive collection of RNGs, but a well-chosen set of modern 'scientific grade' RNGs that allows for running simulation code using different RNGs to check consistency.
+
+
+| RNG         |   native output   | state memory  | arithmetic ops.  |
+|-------------|-------------------|---------------|--------------|
+|             | *(bit)*           | *(bit)*       | *(bit)*      |
+| MWC8222     |    32             | 8224          |  64          |
+| Lehmer64    |    64             |  128          | 128          |
+| PCG64DXSM   |    64             |  128          | 128          |
+| Xoshiro256+ |    64 (a)         |  256          |  64          |
+| MELG19937   |    64             | 19968         |  64          |
+
+
+
+- MWC8222 is a "lag-256 multiply-with-carry" generator.[13] It was the original RNG used by Doornik for ZIGNOR,[9] and was found there to have good statistical properties.
+- Lehmer64 is a [Lehmer generator}(https://en.wikipedia.org/wiki/Lehmer_random_number_generator) proposed by Lemire as a very simple (and supposedly fast) algorithm generating numbers of sufficient statistic quality.[14] The implementation requires 128-bit `__uint128_t` integer arithmetic.
+- PCG64DXSM[24] is the standard RNG of Numpy,[25] and is extensively being used as a result. It has good statistical quality.[14] The implementation requires 128-bit `__uint128_t` integer arithmetic.
+- Xoshiro256+ is a fast and efficient RNG algorithm that can be used to generate doubles (52-bit mantissa) and 32-bit integers, as needed by ZIGNOR, with good statistical quality. (a)a For 64-bit numbers, the slightly more elaborate Xoshiro256++ is recommended.[12] 
+- MELG19937 is a modern 64-bit variant of the well-known Mersenne Twister RNG.[17][23] It has good statistical behaviour.
+
 
 ## References
 
@@ -151,7 +173,9 @@ Bioinformatics Applications", http://www0.cs.ucl.ac.uk/staff/d.jones/GoodPractic
 
 [11] J.A. Doornik, "Conversion of High-Period Random Numbers to Floating Point", ACM Trans. Model. Comput. Simul. 2007, 17, 3. https://dx.doi.org/10.1145/1189756.1189759
 
-[12] https://prng.di.unimi.it/
+[12a] D. Blackman and S. Vigna. "Scrambled Linear Pseudorandom Number Generators", ACM Trans. Math. Softw. 2021, 47, 1–32. https://doir.org/10.1145/3460772.
+
+[12b] https://prng.di.unimi.it/
 
 [13] G. Marsaglia and W. W. Tsang, "The Ziggurat Method for Generating Random Variables", Journal of Statistical Software 2000, 5, 1-7. https://doi.org/10.18637/jss.v005.i08
 
@@ -178,3 +202,6 @@ Bioinformatics Applications", http://www0.cs.ucl.ac.uk/staff/d.jones/GoodPractic
 [23] F. Le Floc’h, "Entropy of Mersenne-Twisters", arXiv [doi:10.48550/arXiv.2101.11350](https://doi.org/10.48550/arXiv.2101.11350)
 
 [24] https://www.pcg-random.org/
+
+[25] https://numpy.org/doc/stable/reference/random/bit_generators/pcg64dxsm.html
+
