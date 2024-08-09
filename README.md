@@ -173,7 +173,7 @@ Bioinformatics Applications", http://www0.cs.ucl.ac.uk/staff/d.jones/GoodPractic
 
 [11] J.A. Doornik, "Conversion of High-Period Random Numbers to Floating Point", ACM Trans. Model. Comput. Simul. 2007, 17, 3. https://dx.doi.org/10.1145/1189756.1189759
 
-[12a] D. Blackman and S. Vigna. "Scrambled Linear Pseudorandom Number Generators", ACM Trans. Math. Softw. 2021, 47, 1–32. https://doir.org/10.1145/3460772.
+[12a] D. Blackman and S. Vigna. "Scrambled Linear Pseudorandom Number Generators", ACM Trans. Math. Softw. 2021, 47, 1–32. https://doi.org/10.1145/3460772.
 
 [12b] https://prng.di.unimi.it/
 
