@@ -1,14 +1,20 @@
 /*==========================================================================
  *==========================================================================
  * randommw.c
- * Pseudo-random number generators with uniform and Gaussian dstributions
+ * Random number generators with uniform and Gaussian dstributions
  * 
  * A re-mix of various tried and tested routines, refactored into a single
- * source file, giving access to all practical aspects of the random number
- * generation, while still being convenient to use.
+ * source file, with a coherent interface giving access to all practical
+ * aspects of random number generation for scientific applications, while 
+ * still being convenient to use.
  * 
  * by Martinus H. V. Werts, 2024, with code from various authors cited
  * below.
+ *
+ * See `README.md` for further information on the scope and background of
+ * this software.
+ *
+ * Distributed under the CeCILL-C license (see LICENSE)
  *
  *==========================================================================
  *
@@ -860,7 +866,7 @@ double DRan_splitmix64(void)
 
 static __uint128_t g_lehmer64_state;
 
-/**
+/*
 * D. H. Lehmer, Mathematical methods in large-scale computing units.
 * Proceedings of a Second Symposium on Large Scale Digital Calculating
 * Machinery;
@@ -1307,8 +1313,8 @@ static void RanSeedJump_pcg64dxsm(uint64_t uSeed, uint64_t uJumpsize)
 
 
 /* The 32-bit unsigned integer U32Ran random routine uses only
-   the upper 32 bits of Xoshiro256+, which are of highest
-   random quality, and should pass all randomness tests. */
+   the upper 32 bits of PCG64DXSM,, and should pass randomness
+   tests. */
 static uint32_t U32Ran_pcg64dxsm(void)
 {
 	return (uint32_t)(pcg_cm_random_r(&pcg64dxsm_state) >> 32);
