@@ -27,7 +27,6 @@ Typical speed test results on Intel Core i7 (Windows 11, gcc, w64devkit, 2024)
 #include <inttypes.h>
 
 #include "randommw.h"
-#include "zigtimer.h"
 
 int main(int argc, char **argv)
 {

@@ -32,3 +32,8 @@ double  DRanNormalZig(void);
 
 /* Fully initialize PRNG */
 void  RanInit(const char *sRan, uint64_t uSeed, uint64_t uJumpsize);
+
+/* from zigtimer.h */
+void 	StartTimer(void);
+void 	StopTimer(void);
+char * GetLapsedTime(void);

@@ -142,7 +142,7 @@ The random number generators included in `randommw.c` were chosen on basis of pu
 |             | *(bit)*           | *(bit)*       | *(bit)*      |
 | MWC8222     |    32             | 8224          |  64          |
 | Lehmer64    |    64             |  128          | 128          |
-| PCG64DXSM   |    64             |  128          | 128          |
+| PCG64DXSM   |    64             |  128 + 128    | 128          |
 | Xoshiro256+ |    64 (a)         |  256          |  64          |
 | MELG19937   |    64             | 19968         |  64          |
 

@@ -2,7 +2,6 @@
 #include <stdlib.h>
 
 #include "randommw.h"
-#include "zigtimer.h"
 
 
 void TimerHeader() 
