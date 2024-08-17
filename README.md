@@ -96,8 +96,8 @@ Generated normally distributed random numbers can be written to a binary file us
 
 ### Suggestions for future work
 
-- The presently used raw moments test (`tests/test_moments.c`) by McFarland [17] should already be quite robust for testing the quality of the Gaussian distribution, but inspiration for additional tests may be found [here](https://cran.r-project.org/web/packages/RcppZiggurat/vignettes/RcppZiggurat.pdf) and [here](https://www.seehuhn.de/pages/ziggurat.html).
-- Include programs that explicitly test final quality of randomness of generated normally distributed random numbers. See, e.g., [19] for feeding output to standard random test suites. Also simply test the underlying uniform RNG, using, *e.g.*, [Lemire's testingRNG](https://github.com/lemire/testingRNG),[9] or other test environments.[20][21][22]
+- The presently used raw moments test (`tests/test_moments.c`) by McFarland [17] is already quite robust for testing the quality of the Gaussian distribution, but inspiration for additional tests may be found [here](https://cran.r-project.org/web/packages/RcppZiggurat/vignettes/RcppZiggurat.pdf) and [here](https://www.seehuhn.de/pages/ziggurat.html).
+- Explicitly test final quality of randomness of generated normally distributed random numbers, complementing the testing already done by Doornik.[6] See, e.g., [19] for feeding output to standard random test suites. Also simply (re-)test the underlying uniform RNG, using, *e.g.*, [Lemire's testingRNG](https://github.com/lemire/testingRNG),[9] or other test environments,[20][21][22] independently reproducing the already available test results for all included RNGs.
 
 
 
