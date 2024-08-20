@@ -4,6 +4,9 @@ Martinus H. V. Werts
 
 *Université d'Angers, CNRS*
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13347168.svg)](https://doi.org/10.5281/zenodo.13347168)
+
+
 ## Description
 
 Numerical simulations for scientific and technological applications regularly require the generation of sequences of random numbers.[1] This is the case, for instance, for [Monte Carlo methods](https://en.wikipedia.org/wiki/Monte_Carlo_method).[2][3][4] Another example is the simulation of the motion of Brownian particles in fluids, where the sequence of numbers, in addition to being random, should follow a Gaussian distribution.[5]
