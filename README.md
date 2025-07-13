@@ -1,4 +1,4 @@
-# randommw: Generator of random numbers with uniform or Gaussian distribution (in C)
+# randommw: Generator of random numbers with uniform or Gaussian distribution (for C/C++)
 
 Martinus H. V. Werts
 
