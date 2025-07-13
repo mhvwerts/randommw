@@ -11,7 +11,7 @@ Martinus H. V. Werts
 
 Numerical simulations for scientific and technological applications regularly require the generation of sequences of random numbers.[1] This is the case, for instance, for [Monte Carlo methods](https://en.wikipedia.org/wiki/Monte_Carlo_method).[2][3][4] Another example is the simulation of the motion of Brownian particles in fluids, where the sequence of numbers, in addition to being random, should follow a Gaussian distribution.[5]
 
-This small, header-only C library provides all the basic functionality for such scientific random number generation. It is an integrated and curated collection of tried & tested code described in the literature. More background is provided at the end of this README document. It is monolithic: only `randommw.h` needs to be included in the project, and it does not need any other non-standard library. The generators are amazingly fast, enabling, in our case, simulation of large numbers of Brownian particles with long trajectories.
+This small, header-only C library provides all the basic functionality for such scientific random number generation. It is an integrated and curated collection of tried & tested code described in the literature. More background is provided at the end of this README document. It is monolithic: only `randommw.h` needs to be included in the project, and it does not need any other non-standard library. It is compatible with C++. The generators are amazingly fast, enabling, in our case, simulation of large numbers of Brownian particles with long trajectories.
  
 The library includes five random number generators (RNGs): MWC8222,[6][7][8] Lehmer64,[9][10] PCG64DXSM,[11][12] Xoshiro256+,[13][14] and MELG19937-64.[15][16] These generate sequences of uniformly distributed integer random numbers and have been reported to pass the relevant statistical tests (see the cited references). There is a ziggurat algorithm, ZIGNOR, coded by J. A. Doornik,[6] for obtaining random floating-point numbers with a Gaussian distribution using these RNGs. The quality of the generated Gaussian distributions has been checked via their raw moments, following McFarland.[17]
 
@@ -52,7 +52,7 @@ int main(void) {
 
 ### Important warning
 
-Choose, initialize and use only a single RNG from `randommw.h` in each C program. The library was designed to provide a single random number stream from a single RNG in a single process. Simple (but quite effective) parallelization of simulations is possible by running several instances of the same program in parallel, using the same RNG with the same seed `uSeed`, but a different `uJumpsize` (see `RanInit()`) for each processes. For comparison purposes, it is possible to switch to a different RNG in the same program, but each switch completely re-initializes and re-starts the RNG.
+Choose, initialize and use only a single RNG from `randommw.h` in each C/C++ program. The library was designed to provide a single random number stream from a single RNG in a single process. Simple (but quite effective) parallelization of simulations is possible by running several instances of the same program in parallel, using the same RNG with the same seed `uSeed`, but a different `uJumpsize` (see `RanInit()`) for each processes. For comparison purposes, it is possible to switch to a different RNG in the same program, but each switch completely re-initializes and re-starts the RNG.
 
 
 ### `void RanInit(const char *sRan, uint64_t uSeed, uint64_t uJumpsize)`
@@ -83,7 +83,7 @@ Obtain an unsigned 32-bit integer random number from the active uniform RNG. In 
 
 ## Compilation, development and testing
 
-The `randommw.h` header-only library and associated programs are developed exclusively using the `gcc` C compiler, on 64-bit x86-64 systems, both on Windows via [mingw-w64](https://www.mingw-w64.org/)/[w64devkit](https://github.com/skeeto/w64devkit) and on standard Linux. The code relies on standard C (C99). Certain RNGs require `__uint128_t` arithmetic. 
+The `randommw.h` header-only library and associated programs are developed exclusively using the `gcc` C compiler, on 64-bit x86-64 systems, both on Windows via [mingw-w64](https://www.mingw-w64.org/)/[w64devkit](https://github.com/skeeto/w64devkit) and on standard Linux. The code relies on standard C (C99). Certain RNGs require `__uint128_t` arithmetic. The header is compatible with C++. A separate C++20 example program has been included.
 
 There is a Makefile in the root directory, and a separate Makefile for the test programs in `./tests`. With a good `gcc` environment, it is sufficient to simply run `make` from the respective directories.
 
@@ -92,7 +92,7 @@ The test programs in `./tests`, together with their makefile, provide clear exam
 
 ## Status 
 
-We have validated the RNGs and are using them for normally distributed random numbers in numerical simulations of colloidal systems, The code is functional and is now contained in a monolithic header-only library (`randommw.h`) that can be easily included in a scientific computing project in C. The random numbers have a good Gaussian distribution (tested up to 8 raw moments, see `tests/test_moments.c`). They are generated with high throughput, using MWC8222, Lehmer64, PCG64DXSM, Xoshiro256+ or MELG19937-64 as underlying uniform RNG.
+We have validated the RNGs and are using them for normally distributed random numbers in numerical simulations of colloidal systems, The code is functional and is now contained in a monolithic header-only library (`randommw.h`) that can be easily included in a scientific computing project in C/C++. The random numbers have a good Gaussian distribution (tested up to 8 raw moments, see `tests/test_moments.c`). They are generated with high throughput, using MWC8222, Lehmer64, PCG64DXSM, Xoshiro256+ or MELG19937-64 as underlying uniform RNG.
 
 Generated normally distributed random numbers can be written to a binary file using `genzignor.c`. These numbers have been used successfully for Brownian simulations in [DDM Toolkit](https://github.com/mhvwerts/ddm-toolkit) ,[18] giving consistent results between the simulation and subsequent DDM analysis of the simulated image stack.
 

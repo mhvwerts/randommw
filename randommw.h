@@ -1,6 +1,5 @@
 /*==========================================================================
  *==========================================================================
- * from original 'randommw.c'
  * Random number generators with uniform and Gaussian dstributions
  * 
  * A re-mix of various tried and tested routines, refactored into a single
@@ -8,8 +7,8 @@
  * practical aspects of random number generation for scientific 
  * applications, while still being convenient to use.
  * 
- * by Martinus H. V. Werts, 2024-2025, with code from various authors cited
- * below.
+ * by Martinus H. V. Werts, 2024-2025, with selected code from various 
+ * authors cited below.
  *
  * See `README.md` for further information on the scope and background of
  * this software.
@@ -25,15 +24,25 @@
  * B. Xoshiro256+ PRNG by Vigna & Blackman, and the splitmix64 PRNG (for
  *    initialization of other PRNGs using a single 64-bit seed)
  * C. Lehmer64 PRNG from Lemire
- * D. MWC8222 by Marsaglia, from Doornik's 'zigrandom.c' (Marsaglia originally
+ * D. PCG64DXSM by O'Neill
+ * E. MWC8222 by Marsaglia, from Doornik's 'zigrandom.c' (Marsaglia originally
       called this generator MWC256, but there is now a different algorithm
 	  with that name.)
- * E. Doornik's ziggurat algorithm for generation of normally distributed 
+ * F. Doornik's ziggurat algorithm for generation of normally distributed 
  *    random numbers (from 'zignor.c')
- * F. Additional functionality: 'zigtimer.c' timing functions etc.
+ * G. Additional functionality: 'zigtimer.c' timing functions etc.
  *
  *==========================================================================
  *==========================================================================*/
+
+#ifndef RANDOMMW_H
+#define RANDOMMW_H
+
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 
 
@@ -1805,5 +1814,15 @@ char * GetLapsedTime(void)
 }
 /*-------------------------- END timer functions ---------------------------*/
 
-
 /*==========================================================================*/
+
+
+
+
+#ifdef __cplusplus
+}
+#endif
+
+
+
+#endif // RANDOMMW_H

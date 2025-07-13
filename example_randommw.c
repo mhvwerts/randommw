@@ -1,4 +1,4 @@
-/* test_minimal.c : simple generation of normally distributed random numbers
+/* example: simple generation of normally distributed random numbers
 
 */
 #include <stdio.h>
