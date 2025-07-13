@@ -11,7 +11,7 @@ Martinus H. V. Werts
 
 Numerical simulations for scientific and technological applications regularly require the generation of sequences of random numbers.[1] This is the case, for instance, for [Monte Carlo methods](https://en.wikipedia.org/wiki/Monte_Carlo_method).[2][3][4] Another example is the simulation of the motion of Brownian particles in fluids, where the sequence of numbers, in addition to being random, should follow a Gaussian distribution.[5]
 
-This small C library provides all the basic functionality for such scientific random number generation. It is an integrated and curated collection of tried & tested code described in the literature. More background is provided at the end of this README document. It is monolithic: only `randommw.c` and `randommw.h` need to be included in the project, and it does not need any other non-standard library. The generators are amazingly fast, enabling, in our case, simulation of large numbers of Brownian particles with long trajectories.
+This small, header-only C library provides all the basic functionality for such scientific random number generation. It is an integrated and curated collection of tried & tested code described in the literature. More background is provided at the end of this README document. It is monolithic: only `randommw.h` needs to be included in the project, and it does not need any other non-standard library. The generators are amazingly fast, enabling, in our case, simulation of large numbers of Brownian particles with long trajectories.
  
 The library includes five random number generators (RNGs): MWC8222,[6][7][8] Lehmer64,[9][10] PCG64DXSM,[11][12] Xoshiro256+,[13][14] and MELG19937-64.[15][16] These generate sequences of uniformly distributed integer random numbers and have been reported to pass the relevant statistical tests (see the cited references). There is a ziggurat algorithm, ZIGNOR, coded by J. A. Doornik,[6] for obtaining random floating-point numbers with a Gaussian distribution using these RNGs. The quality of the generated Gaussian distributions has been checked via their raw moments, following McFarland.[17]
 
@@ -52,14 +52,14 @@ int main(void) {
 
 ### Important warning
 
-Choose, initialize and use only a single RNG from `randommw.c` in each C program. The library was designed to provide a single random number stream from a single RNG in a single process. Simple (but quite effective) parallelization of simulations is possible by running several instances of the same program in parallel, using the same RNG with the same seed `uSeed`, but a different `uJumpsize` (see `RanInit()`) for each processes. For comparison purposes, it is possible to switch to a different RNG in the same program, but each switch completely re-initializes and re-starts the RNG.
+Choose, initialize and use only a single RNG from `randommw.h` in each C program. The library was designed to provide a single random number stream from a single RNG in a single process. Simple (but quite effective) parallelization of simulations is possible by running several instances of the same program in parallel, using the same RNG with the same seed `uSeed`, but a different `uJumpsize` (see `RanInit()`) for each processes. For comparison purposes, it is possible to switch to a different RNG in the same program, but each switch completely re-initializes and re-starts the RNG.
 
 
 ### `void RanInit(const char *sRan, uint64_t uSeed, uint64_t uJumpsize)`
 
 Initialize the ziggurat algorithm, set the RNG and its random seed, and optionally "fast-forward" the generator. The random seed should always be supplied by the user, in order to have reproducible random number streams. If a different stream is needed, provide a different seed.
 
-If `sRan` is an empty string, the default generator will be used: MWC8222. At present, the possible choices for `sRan` are `"MWC8222"`, `"Lehmer64"`, `"PCG64DXSM"`, `"Xoshiro256+"` and `"MELG19937"`. The string is case-sensitive, and should correspond exactly to one of these options; else, your program will crash. 
+If `sRan` is an empty string, the default generator will be used: MWC8222. At present, the possible choices for `sRan` are `"MWC8222"`, `"Lehmer64"`, `"PCG64DXSM"`, `"Xoshiro256+"` and `"MELG19937"`. The string is case-sensitive, and should correspond exactly to one of these options; **else, your program will crash**. 
 
 The random seed `uSeed` is always an unsigned 64-bit integer, independently of the specific random number generator. A RNG-specific routine uses this seed to fully initialize the RNG. 
 
@@ -83,16 +83,16 @@ Obtain an unsigned 32-bit integer random number from the active uniform RNG. In 
 
 ## Compilation, development and testing
 
-The `randommw.c` library module and associated programs are developed exclusively using the `gcc` C compiler, on 64-bit x86-64 systems, both on Windows via [mingw-w64](https://www.mingw-w64.org/)/[w64devkit](https://github.com/skeeto/w64devkit) and on standard Linux. The code relies on standard C (C99). Certain RNGs require `__uint128_t` arithmetic. 
+The `randommw.h` header-only library and associated programs are developed exclusively using the `gcc` C compiler, on 64-bit x86-64 systems, both on Windows via [mingw-w64](https://www.mingw-w64.org/)/[w64devkit](https://github.com/skeeto/w64devkit) and on standard Linux. The code relies on standard C (C99). Certain RNGs require `__uint128_t` arithmetic. 
 
 There is a Makefile in the root directory, and a separate Makefile for the test programs in `./tests`. With a good `gcc` environment, it is sufficient to simply run `make` from the respective directories.
 
-The test programs in `./tests`, together with their makefile, provide clear examples how to integrate and use `randommw.c` in your own programs.
+The test programs in `./tests`, together with their makefile, provide clear examples how to integrate and use `randommw.h` in your own programs.
 
 
 ## Status 
 
-We have validated the RNGs and are using them for normally distributed random numbers in numerical simulations of colloidal systems, The code is functional and is now contained in a monolithic module (`randommw.c`) that can be easily included in a scientific computing project in C. The random numbers have a good Gaussian distribution (tested up to 8 raw moments, see `tests/test_moments.c`). They are generated with high throughput, using MWC8222, Lehmer64, PCG64DXSM, Xoshiro256+ or MELG19937-64 as underlying uniform RNG.
+We have validated the RNGs and are using them for normally distributed random numbers in numerical simulations of colloidal systems, The code is functional and is now contained in a monolithic header-only library (`randommw.h`) that can be easily included in a scientific computing project in C. The random numbers have a good Gaussian distribution (tested up to 8 raw moments, see `tests/test_moments.c`). They are generated with high throughput, using MWC8222, Lehmer64, PCG64DXSM, Xoshiro256+ or MELG19937-64 as underlying uniform RNG.
 
 Generated normally distributed random numbers can be written to a binary file using `genzignor.c`. These numbers have been used successfully for Brownian simulations in [DDM Toolkit](https://github.com/mhvwerts/ddm-toolkit) ,[18] giving consistent results between the simulation and subsequent DDM analysis of the simulated image stack.
 
@@ -121,7 +121,7 @@ A particularly portable, structured and relatively well-documented C code for th
 
 In the folder `original_ziggurat_code_doornik` the source code of the original [ZIP archive](https://www.doornik.com/research/ziggurat_code.zip) by Doornik is conserved. The compiled executables from the ZIP file have been removed for security reasons, and the "makefile" folders for gcc have been renamed to emphasize the 32-bit *vs* 64-bit nature of the targeted executables. The file contents have been left intact.
 
-The files necessary for development (`zignor.c`, `zignor.h`, `zigrandom.c` and `zigrandom.h`) have been copied from `original_ziggurat_code_doornik` to the root folder. `zignor` and `zigrandom` were merged into `randommw` and have undergone further changes. The modifications only concern the structure of the code, not the fundamental algorithms. The function`DRan_MWC8222()` generates random doubles with full 52-bit mantissa resolution (instead of 32-bit in Doornik's original) via two iterations of the MWC8222 generator (see [24]).
+The files necessary for development (`zignor.c`, `zignor.h`, `zigrandom.c` and `zigrandom.h`) have been copied from `original_ziggurat_code_doornik` to the root folder. `zignor` and `zigrandom` were merged into `randommw.h` and have undergone further changes. The modifications only concern the structure of the code, not the fundamental algorithms. The function`DRan_MWC8222()` generates random doubles with full 52-bit mantissa resolution (instead of 32-bit in Doornik's original) via two iterations of the MWC8222 generator (see [24]).
 
 The MWC8222 RNG is a "lag-256 multiply-with-carry" 32-bit random number generator[25] with a period of about 2^8222. Not to be confused with other multiply-with-carry generators called MWC256, that do not have such a big state and period.
 
@@ -137,7 +137,7 @@ Several implementations of ziggurat algorithms for generation of normally distri
 
 ### Selection of included RNGs
 
-The random number generators included in `randommw.c` were chosen on basis of published reports of statistical quality and speed, support in the scientific literature, and availability of clear and working C source code, aiming for diversity of the underlying algorithms. It is not our aim to have an exhaustive collection of RNGs, but a well-chosen set of modern 'scientific grade' RNGs that allows for running simulation code using different RNGs to check consistency.
+The random number generators included in `randommw.h` were chosen on basis of published reports of statistical quality and speed, support in the scientific literature, and availability of clear and working C source code, aiming for diversity of the underlying algorithms. It is not our aim to have an exhaustive collection of RNGs, but a well-chosen set of modern 'scientific grade' RNGs that allows for running simulation code using different RNGs to check consistency.
 
 
 | RNG         |   native output   | state memory  | arithmetic ops.  |
