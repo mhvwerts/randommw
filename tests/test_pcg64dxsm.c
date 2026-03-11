@@ -4,17 +4,23 @@
  (should) produce exactly the same sequences of random integers, also after 
  "jumping". 
  
- This demonstrates that the PCG64DXSM RNG in `randommw.c` is
+ This demonstrates that the PCG64DXSM RNG in `randommw.h` is
  working correctly and in conformity to the PCG64DXSM RNG in Numpy.
 
- The PCG64DXSM initialization code in randommw.c has been modified
+ The PCG64DXSM initialization code in randommw.h has been modified
  to reproduce exactly the state of the PCG64DXSM RNG obtained by 
  numpy.random.PGC64DXSM(seed = 0) and PGC64DXSM(seed = 12345).
  This is not automatic, since the initialization of PCG64DXSM is not the 
- same in randommw.c and in Numpy.  It is not feasible to use exactly the 
- same initialization of the PCG64DXSM in `randommw.c` as in Numpy. The 
- latter depends on the specific Numpy infrastructure. In `randommw.c`, 
+ same in randommw.h and in Numpy.  It is not feasible to use exactly the 
+ same initialization of the PCG64DXSM in `randommw.h` as in Numpy. The 
+ latter depends on the specific Numpy infrastructure. In `randommw.h`, 
  SplitMix64 is used for initialization.
+ 
+ Likewise, using seed = 53280 will initialize the randommw PCG64DXSM
+ to reproduce the state of the Rust implementation of PCG64DXSM obtained
+ with `let mut rng = Pcg64Dxsm::seed_from_u64(53280);` This gives indeed
+ the same sequence of u64 random numbers between randommw and the Rust
+ PCG64DXSM.
 
 */
 
@@ -47,13 +53,13 @@ int main(void)
 
 
 	
-	uint64_t sseed[2] = {0, 12345};
-	uint64_t Njmp[2]     = {7, 64738};
+	uint64_t sseed[3] = {0, 12345, 53280};
+	uint64_t Njmp[3]     = {7, 64738, 646};
 
 	uint64_t jj, ii;
 
 
-	for(jj = 0; jj<2; jj++)
+	for(jj = 0; jj<3; jj++)
 	{
 		printf("\n");
 		starline();

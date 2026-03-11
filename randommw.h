@@ -1304,6 +1304,16 @@ static void RanSetSeed_pcg64dxsm(uint64_t uSeed)
 		pcg64dxsm_state.inc   =
 			PCG_128BIT_CONSTANT(0xc9c7353e6e2b1f28, 0x7d761f2d4027fae7);
 	}
+	else if (uSeed==53280)
+	{
+		// For the special case uSeed = 53280
+		// adjust state to match Rust Pcg64Dxsm::seed_from_u64(53280) 
+		// from crate rand_pcg v0.10.1
+		pcg64dxsm_state.state = 
+			PCG_128BIT_CONSTANT(0xc8a42759023c46a4, 0x516c72c8aaf3ef96);
+		pcg64dxsm_state.inc   =
+			PCG_128BIT_CONSTANT(0x9e667d44da4cfdc5, 0xfdcf8d26e0e48015);
+	}
 	else
 	{
 		RanSetSeed_splitmix64(uSeed); // seed splitmix
