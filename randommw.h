@@ -1278,7 +1278,9 @@ extern void pcg64dxsm_getstateinc(uint64_t *dataptr)
 	intialization with a given initial seed value between Numpy and 
 	randommw.c. To enable testing and comparison, we have included two cases 
 	(uSeed==0, uSeed==12345) where the state of PCG64DXSM is exactly
-	initialized as in numpy.random.PCG64DXSM.
+	initialized as in numpy.random.PCG64DXSM. A third 'special seed' case
+	(uSeed==53280) puts the current PCG64DXSM into the exact same state
+	as `Pcg64Dxsm::seed_from_u64(53280)` in Rust (rand_pcg v0.10.1). 
 */
 
 static void RanSetSeed_pcg64dxsm(uint64_t uSeed)
